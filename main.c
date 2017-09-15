@@ -21,6 +21,8 @@ bool          g_quit                = false;
 
 #define       TIMESTAMP_NOT_SET     (-1L)
 
+bool          g_bufferFilledOnce   = false;
+
 // -------------------------- +Macroses --------------------------
 
 #define logfmt(fmt, ...) printf(fmt, __VA_ARGS__)
@@ -127,7 +129,7 @@ struct synth_Envelope
     bool noteOn;
 };
 
-struct synth_Envelope g_envelope = { 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false };
+struct synth_Envelope g_envelope = { 0.01, 0.1, 0.2, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false };
 
 void synth_envelopeNoteOn(struct synth_Envelope *envelope, double time)
 {
@@ -144,27 +146,27 @@ void synth_envelopeNoteOff(struct synth_Envelope *envelope, double time)
     envelope->noteOn = false;
 }
 
-double synth_oscillate(enum synth_WaveType type, double frequency, double dt)
+double synth_oscillate(enum synth_WaveType type, double frequency)
 {
     switch (type) {
         case WAVE_TYPE_SIN: {
-            return sin(synth_convertFrequency(frequency) * dt);
+            return sin(synth_convertFrequency(frequency) * SAMPLE_TIME);
         }
         case WAVE_TYPE_SQUARE: {
-            return sin(synth_convertFrequency(frequency) * dt) > 0.0 ? 1.0 : -1.0;
+            return sin(synth_convertFrequency(frequency) * SAMPLE_TIME) > 0.0 ? 1.0 : -1.0;
         }
         case WAVE_TYPE_TRIANGLE: {
-            return asin(sin(synth_convertFrequency(frequency) * dt) * 2.0 / M_PI);
+            return asin(sin(synth_convertFrequency(frequency) * SAMPLE_TIME) * 2.0 / M_PI);
         }
         case WAVE_TYPE_SAW_ANALOGUE: {
             double output = 0.0;
             for (int n = 1; n < 100; n++) {
-                output += (sin((double) n * synth_convertFrequency(frequency) * dt)) / (double) n;
+                output += (sin((double) n * synth_convertFrequency(frequency) * SAMPLE_TIME)) / (double) n;
             }
             return output * (2.0 / M_PI);
         }
         case WAVE_TYPE_SAW_OPTIMIZED: {
-            return (2.0 / M_PI) * (frequency * M_PI * fmod(dt, 1.0 / frequency) - (M_PI / 2.0));
+            return (2.0 / M_PI) * (frequency * M_PI * fmod(SAMPLE_TIME, 1.0 / frequency) - (M_PI / 2.0));
         }
         case WAVE_TYPE_NOISE: {
             return 2.0 * ((double) rand() / (double) RAND_MAX) - 1.0;
@@ -187,7 +189,9 @@ double synth_envelopeGetAmplitude(struct synth_Envelope *envelope, double time)
         if (lifetime <= envelope->attackTime) { // A
             amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
         } else if (lifetime <= (envelope->attackTime + envelope->decayTime)) { // D
-            amplitude = ((lifetime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
+            amplitude =
+                    ((lifetime - envelope->attackTime) / envelope->decayTime) *
+                    (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
         } else { // S
             amplitude = envelope->sustainAmplitude;
         }
@@ -205,7 +209,7 @@ short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume
     return synth_convertWave(
             masterVolume *
                     synth_envelopeGetAmplitude(envelope, time) *
-                    (synth_oscillate(WAVE_TYPE_SIN, g_baseFrequency * 0.5, SAMPLE_TIME) + synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency, SAMPLE_TIME))
+                    (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency) + synth_oscillate(WAVE_TYPE_SIN, g_baseFrequency * 0.5))
     );
 }
 
@@ -216,13 +220,18 @@ void synth_updateBuffer(double startTime, double dt)
         synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, startTime + passed));
         passed += SAMPLE_TIME;
     }
+    g_bufferFilledOnce = true;
 }
 
 // -------------------------- +Audio --------------------------
 
 void synth_audioDeviceCallback(void *userData, Uint8 *data, int length)
 {
-    synth_ringBufferReadMany((short *) data, SAMPLES);
+    if (g_bufferFilledOnce) {
+        synth_ringBufferReadMany((short *) data, SAMPLES);
+    } else {
+        memset(data, 0, (size_t) length);
+    }
 }
 
 void synth_audioDeviceList()
