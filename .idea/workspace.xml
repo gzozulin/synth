@@ -40,12 +40,12 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2523">
-              <caret line="199" column="95" lean-forward="true" selection-start-line="199" selection-start-column="95" selection-end-line="199" selection-end-column="95" />
+            <state relative-caret-position="442">
+              <caret line="26" column="78" lean-forward="true" selection-start-line="26" selection-start-column="78" selection-end-line="26" selection-end-column="78" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
-                <element signature="e#2610#2883#0" expanded="true" />
-                <element signature="e#10140#10207#0" expanded="true" />
+                <element signature="e#2571#2844#0" expanded="true" />
+                <element signature="e#10101#10168#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -166,7 +166,7 @@
       <option name="presentableId" value="Default" />
       <updated>1505221857717</updated>
       <workItem from="1505221859163" duration="10495000" />
-      <workItem from="1505233485729" duration="32574000" />
+      <workItem from="1505233485729" duration="32591000" />
     </task>
     <task id="LOCAL-00001" summary="Some fixes;">
       <created>1505488749748</created>
@@ -196,11 +196,18 @@
       <option name="project" value="LOCAL" />
       <updated>1505490937264</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Some fixes;">
+      <created>1505491533307</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1505491533307</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="43069000" />
+    <option name="totallyTimeSpent" value="43086000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="49" y="-4" width="2511" height="1084" extended-state="6" />
@@ -280,8 +287,8 @@
           <caret line="72" column="29" lean-forward="true" selection-start-line="72" selection-start-column="29" selection-end-line="72" selection-end-column="29" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#2610#2883#0" expanded="true" />
-            <element signature="e#10140#10207#0" expanded="true" />
+            <element signature="e#2571#2844#0" expanded="true" />
+            <element signature="e#10101#10168#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -360,12 +367,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2523">
-          <caret line="199" column="95" lean-forward="true" selection-start-line="199" selection-start-column="95" selection-end-line="199" selection-end-column="95" />
+        <state relative-caret-position="442">
+          <caret line="26" column="78" lean-forward="true" selection-start-line="26" selection-start-column="78" selection-end-line="26" selection-end-column="78" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#2610#2883#0" expanded="true" />
-            <element signature="e#10140#10207#0" expanded="true" />
+            <element signature="e#2571#2844#0" expanded="true" />
+            <element signature="e#10101#10168#0" expanded="true" />
           </folding>
         </state>
       </provider>

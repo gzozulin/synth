@@ -1,8 +1,6 @@
 #include <stdbool.h>
 #include <math.h>
-#include <limits.h>
 #include <assert.h>
-#include <float.h>
 
 #include "SDL2/SDL.h"
 
