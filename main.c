@@ -214,12 +214,13 @@ short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume
     );
 }
 
-void synth_updateBuffer(double startTime, double dt)
+void synth_updateBuffer(double startTime, double *updateAccum)
 {
-    double passed = 0.0;
-    while (passed < dt) {
-        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, startTime + passed));
-        passed += SAMPLE_TIME;
+    double time = startTime;
+    while (*updateAccum > SAMPLE_TIME) {
+        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, time));
+        *updateAccum -= SAMPLE_TIME;
+        time += SAMPLE_TIME;
     }
     g_bufferFilledOnce = true;
 }
@@ -322,11 +323,13 @@ void synth_appPollEvents(double time)
 void synth_appRunLoop()
 {
     logi("synth_appRunLoop()");
+    double updateAccumulator = 0.0;
     double lastUpdate = synth_currentTime();
     while (!g_quit) {
         const double currentTime = synth_currentTime();
+        updateAccumulator += (currentTime - lastUpdate);
         synth_appPollEvents(currentTime);
-        synth_updateBuffer(lastUpdate, currentTime - lastUpdate);
+        synth_updateBuffer(lastUpdate, &updateAccumulator);
         lastUpdate = currentTime;
     }
 }
