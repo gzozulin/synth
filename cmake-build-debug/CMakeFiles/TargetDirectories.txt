@@ -1,0 +1,3 @@
+/home/grigory/synth/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/grigory/synth/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/grigory/synth/cmake-build-debug/CMakeFiles/synth.dir
