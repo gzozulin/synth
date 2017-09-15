@@ -147,27 +147,27 @@ void synth_envelopeNoteOff(struct synth_Envelope *envelope, double time)
     envelope->noteOn = false;
 }
 
-double synth_oscillate(enum synth_WaveType type, double frequency, double dt)
+double synth_oscillate(enum synth_WaveType type, double frequency, double time)
 {
     switch (type) {
         case WAVE_TYPE_SIN: {
-            return sin(synth_convertFrequency(frequency) * dt);
+            return sin(synth_convertFrequency(frequency) * time);
         }
         case WAVE_TYPE_SQUARE: {
-            return sin(synth_convertFrequency(frequency) * dt) > 0.0 ? 1.0 : -1.0;
+            return sin(synth_convertFrequency(frequency) * time) > 0.0 ? 1.0 : -1.0;
         }
         case WAVE_TYPE_TRIANGLE: {
-            return asin(sin(synth_convertFrequency(frequency) * dt) * 2.0 / M_PI);
+            return asin(sin(synth_convertFrequency(frequency) * time) * 2.0 / M_PI);
         }
         case WAVE_TYPE_SAW_ANALOGUE: {
             double output = 0.0;
             for (int n = 1; n < 100; n++) {
-                output += (sin((double) n * synth_convertFrequency(frequency) * dt)) / (double) n;
+                output += (sin((double) n * synth_convertFrequency(frequency) * time)) / (double) n;
             }
             return output * (2.0 / M_PI);
         }
         case WAVE_TYPE_SAW_OPTIMIZED: {
-            return (2.0 / M_PI) * (frequency * M_PI * fmod(dt, 1.0 / frequency) - (M_PI / 2.0));
+            return (2.0 / M_PI) * (frequency * M_PI * fmod(time, 1.0 / frequency) - (M_PI / 2.0));
         }
         case WAVE_TYPE_NOISE: {
             return 2.0 * ((double) rand() / (double) RAND_MAX) - 1.0;
@@ -210,7 +210,7 @@ short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume
     return synth_convertWave(
             masterVolume *
                     synth_envelopeGetAmplitude(envelope, time) *
-                    (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SIN, g_baseFrequency * 0.5, time))
+                    (synth_oscillate(WAVE_TYPE_SAW_OPTIMIZED, g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SIN, g_baseFrequency * 0.5, time))
     );
 }
 
