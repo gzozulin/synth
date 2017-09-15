@@ -19,12 +19,7 @@ SDL_Renderer  *g_renderer           = NULL;
 
 bool          g_quit                = false;
 
-#define       KEYS_NUM              7
-const char    g_keys[]              = "zxcvbnm";
-
 #define       TIMESTAMP_NOT_SET     (-1L)
-
-#define       ENVELOPES_NUM         7
 
 // -------------------------- +Macroses --------------------------
 
@@ -41,11 +36,11 @@ extern inline int       synth_min(const int x, const int y) { return y < x ? y :
 extern inline double    synth_convertFrequency(double herz) { return herz * 2.0 * M_PI; }
 extern inline short     synth_convertWave(double wave) { return (short) (SHRT_MAX * wave); }
 
-extern inline double    synth_calculateFrequency(int key)
+extern inline double    synth_calculateFrequency(int note) // octave??
 {
     const double baseFrequency = 110.0; // A2
     const double twelwthRootOf2 = pow(2.0, 1.0 / 12.0);
-    return baseFrequency * pow(twelwthRootOf2, key);
+    return baseFrequency * pow(twelwthRootOf2, note);
 }
 
 // -------------------------- +RingBuffer --------------------------
@@ -96,6 +91,17 @@ void synth_ringBufferTests()
 
 // -------------------------- +Oscillator --------------------------
 
+int     g_baseFrequencyIndex    = 0;
+double  g_baseFrequency         = 110.0;
+#define BASE_FREQUENCIES_NUM    10
+
+void synth_increaseBaseFrequency()
+{
+    g_baseFrequencyIndex++;
+    g_baseFrequencyIndex %= BASE_FREQUENCIES_NUM;
+    g_baseFrequency = synth_calculateFrequency(g_baseFrequencyIndex);
+}
+
 enum synth_WaveType
 {
     WAVE_TYPE_SIN,
@@ -108,8 +114,6 @@ enum synth_WaveType
 
 struct synth_Envelope
 {
-    enum synth_WaveType waveType;
-
     double attackTime;
     double decayTime;
     double releaseTime;
@@ -123,16 +127,7 @@ struct synth_Envelope
     bool noteOn;
 };
 
-struct synth_Envelope g_envelopes[ENVELOPES_NUM] =
-{
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
-        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false }
-};
+struct synth_Envelope g_envelope = { 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false };
 
 void synth_envelopeNoteOn(struct synth_Envelope *envelope, double time)
 {
@@ -205,12 +200,12 @@ double synth_envelopeGetAmplitude(struct synth_Envelope *envelope, double time)
     return amplitude;
 }
 
-short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume, double frequency, double time)
+short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume, double time)
 {
     return synth_convertWave(
             masterVolume *
                     synth_envelopeGetAmplitude(envelope, time) *
-                    synth_oscillate(envelope->waveType, frequency, SAMPLE_TIME)
+                    (synth_oscillate(WAVE_TYPE_SIN, g_baseFrequency * 0.5, SAMPLE_TIME) + synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency, SAMPLE_TIME))
     );
 }
 
@@ -218,7 +213,7 @@ void synth_updateBuffer(double startTime, double dt)
 {
     double passed = 0.0;
     while (passed < dt) {
-        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelopes[0], 1.0, synth_calculateFrequency(0), startTime + passed));
+        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, startTime + passed));
         passed += SAMPLE_TIME;
     }
 }
@@ -273,16 +268,43 @@ void synth_appWinCreate()
     SDL_RenderPresent(g_renderer);
 }
 
+void synth_appHandleKeyDown(SDL_Keycode sym, double time)
+{
+    switch (sym) {
+        case ' ': {
+            if (!g_envelope.noteOn) {
+                synth_envelopeNoteOn(&g_envelope, time);
+            }
+            break;
+        }
+        default: {
+            synth_increaseBaseFrequency();
+            break;
+        };
+    }
+}
+
+void synth_appHandleKeyUp(SDL_Keycode sym, double time)
+{
+    switch (sym) {
+        case ' ': {
+            synth_envelopeNoteOff(&g_envelope, time);
+            break;
+        }
+        default:break;
+    }
+}
+
 void synth_appPollEvents(double time)
 {
     SDL_Event event;
     while( SDL_PollEvent(&event) != 0 ) {
         if(event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == 27)) {
             g_quit = true;
-        } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == ' ' && !g_envelopes[0].noteOn) {
-            synth_envelopeNoteOn(&g_envelopes[0], time);
+        } else if (event.type == SDL_KEYDOWN) {
+            synth_appHandleKeyDown(event.key.keysym.sym, time);
         } else if (event.type == SDL_KEYUP && event.key.keysym.sym == ' ') {
-            synth_envelopeNoteOff(&g_envelopes[0], time);
+            synth_appHandleKeyUp(event.key.keysym.sym, time);
         }
     }
 }
