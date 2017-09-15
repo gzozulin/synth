@@ -11,9 +11,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9b32eaf2-b80b-4c15-856b-171b725bb614" name="Default" comment="Some fixes;">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/main.c.o" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/main.c.o" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/synth" afterPath="$PROJECT_DIR$/cmake-build-debug/synth" />
+    <list default="true" id="9b32eaf2-b80b-4c15-856b-171b725bb614" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.c" afterPath="$PROJECT_DIR$/main.c" />
     </list>
@@ -40,12 +38,12 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="801">
-              <caret line="165" column="41" lean-forward="true" selection-start-line="165" selection-start-column="41" selection-end-line="165" selection-end-column="41" />
+            <state relative-caret-position="262">
+              <caret line="99" column="34" lean-forward="true" selection-start-line="99" selection-start-column="34" selection-end-line="99" selection-end-column="34" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
                 <element signature="e#2610#2883#0" expanded="true" />
-                <element signature="e#10087#10154#0" expanded="true" />
+                <element signature="e#10127#10194#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -166,7 +164,7 @@
       <option name="presentableId" value="Default" />
       <updated>1505221857717</updated>
       <workItem from="1505221859163" duration="10495000" />
-      <workItem from="1505233485729" duration="31752000" />
+      <workItem from="1505233485729" duration="31978000" />
     </task>
     <task id="LOCAL-00001" summary="Some fixes;">
       <created>1505488749748</created>
@@ -182,11 +180,18 @@
       <option name="project" value="LOCAL" />
       <updated>1505490120336</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Some fixes;">
+      <created>1505490711127</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1505490711127</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="42247000" />
+    <option name="totallyTimeSpent" value="42473000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="49" y="-4" width="2511" height="1084" extended-state="6" />
@@ -227,7 +232,14 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="39" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/main.c</url>
+          <line>101</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="40" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
@@ -267,7 +279,7 @@
           <folding>
             <element signature="e#0#20#0" expanded="true" />
             <element signature="e#2610#2883#0" expanded="true" />
-            <element signature="e#10087#10154#0" expanded="true" />
+            <element signature="e#10127#10194#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -346,12 +358,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="801">
-          <caret line="165" column="41" lean-forward="true" selection-start-line="165" selection-start-column="41" selection-end-line="165" selection-end-column="41" />
+        <state relative-caret-position="262">
+          <caret line="99" column="34" lean-forward="true" selection-start-line="99" selection-start-column="34" selection-end-line="99" selection-end-column="34" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
             <element signature="e#2610#2883#0" expanded="true" />
-            <element signature="e#10087#10154#0" expanded="true" />
+            <element signature="e#10127#10194#0" expanded="true" />
           </folding>
         </state>
       </provider>
