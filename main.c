@@ -117,20 +117,37 @@ struct synth_Envelope
     double startAmplitude;
     double sustainAmplitude;
 
-    double triggerOnTimestamp;
-    double triggerOffTimestamp;
+    double onTimestamp;
+    double offTimestamp;
+
+    bool noteOn;
 };
 
 struct synth_Envelope g_envelopes[ENVELOPES_NUM] =
 {
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET },
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET },
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET },
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET },
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET },
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET },
-        { WAVE_TYPE_TRIANGLE, 100, 100, 200, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET }
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false },
+        { WAVE_TYPE_TRIANGLE, 0.01, 0.01, 0.02, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false }
 };
+
+void synth_envelopeNoteOn(struct synth_Envelope *envelope, double time)
+{
+    assert(envelope != 0);
+    envelope->onTimestamp = time;
+    envelope->offTimestamp = TIMESTAMP_NOT_SET;
+    envelope->noteOn = true;
+}
+
+void synth_envelopeNoteOff(struct synth_Envelope *envelope, double time)
+{
+    assert(envelope != 0);
+    envelope->offTimestamp = time;
+    envelope->noteOn = false;
+}
 
 double synth_oscillate(enum synth_WaveType type, double frequency, double dt)
 {
@@ -162,29 +179,25 @@ double synth_oscillate(enum synth_WaveType type, double frequency, double dt)
     return 0.0;
 }
 
-double synth_envelopeCreateAmplitude(struct synth_Envelope *envelope, double time)
+double synth_envelopeGetAmplitude(struct synth_Envelope *envelope, double time)
 {
     assert(envelope != 0);
     double amplitude = 0.0;
-    if (envelope->triggerOnTimestamp == TIMESTAMP_NOT_SET) {
+    if (!envelope->noteOn && time > (envelope->offTimestamp + envelope->releaseTime)) {
         return amplitude;
     }
-    if (envelope->triggerOffTimestamp == TIMESTAMP_NOT_SET) { // note on
-        const double lifetime = time - envelope->triggerOnTimestamp;
+    if (envelope->noteOn) {
+        const double lifetime = time - envelope->onTimestamp;
         assert(lifetime >= 0.0);
         if (lifetime <= envelope->attackTime) { // A
-            logi("attack");
             amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
         } else if (lifetime <= (envelope->attackTime + envelope->decayTime)) { // D
-            logi("decay");
             amplitude = ((lifetime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
         } else { // S
-            logi("sustain");
             amplitude = envelope->sustainAmplitude;
         }
-    } else { // note off, R
-        logi("release");
-        amplitude = ((time - envelope->triggerOffTimestamp) / envelope->releaseTime) * (0.0 - envelope->sustainAmplitude) + envelope->sustainAmplitude;
+    } else { // R
+        amplitude = ((time - envelope->offTimestamp) / envelope->releaseTime) * (0.0 - envelope->sustainAmplitude) + envelope->sustainAmplitude;
     }
     if (amplitude < DBL_EPSILON) {
         amplitude = 0.0;
@@ -192,10 +205,12 @@ double synth_envelopeCreateAmplitude(struct synth_Envelope *envelope, double tim
     return amplitude;
 }
 
-short synth_oscCreateNoise(struct synth_Envelope *envelope, double volume, double frequency, double sampleTime, double time)
+short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume, double frequency, double time)
 {
     return synth_convertWave(
-            volume * synth_envelopeCreateAmplitude(envelope, time) * synth_oscillate(envelope->waveType, frequency, sampleTime)
+            masterVolume *
+                    synth_envelopeGetAmplitude(envelope, time) *
+                    synth_oscillate(envelope->waveType, frequency, SAMPLE_TIME)
     );
 }
 
@@ -203,8 +218,7 @@ void synth_updateBuffer(double startTime, double dt)
 {
     double passed = 0.0;
     while (passed < dt) {
-        struct synth_Envelope *envelope = &g_envelopes[0];
-        synth_ringBufferWriteOne(synth_oscCreateNoise(envelope, 1.0, 220.0 /*???????*/, SAMPLE_TIME, startTime + passed));
+        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelopes[0], 1.0, synth_calculateFrequency(0), startTime + passed));
         passed += SAMPLE_TIME;
     }
 }
@@ -259,17 +273,16 @@ void synth_appWinCreate()
     SDL_RenderPresent(g_renderer);
 }
 
-void synth_appPollEvents(double currentUpdate)
+void synth_appPollEvents(double time)
 {
     SDL_Event event;
     while( SDL_PollEvent(&event) != 0 ) {
         if(event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == 27)) {
             g_quit = true;
-        } else if (event.type == SDL_KEYDOWN) {
-            g_envelopes[0].triggerOnTimestamp = currentUpdate;
-            g_envelopes[0].triggerOffTimestamp = TIMESTAMP_NOT_SET;
-        } else if (event.type == SDL_KEYUP) {
-            g_envelopes[0].triggerOffTimestamp = currentUpdate;
+        } else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == ' ' && !g_envelopes[0].noteOn) {
+            synth_envelopeNoteOn(&g_envelopes[0], time);
+        } else if (event.type == SDL_KEYUP && event.key.keysym.sym == ' ') {
+            synth_envelopeNoteOff(&g_envelopes[0], time);
         }
     }
 }
@@ -279,10 +292,10 @@ void synth_appRunLoop()
     logi("synth_appRunLoop()");
     double lastUpdate = synth_currentTime();
     while (!g_quit) {
-        const double currentUpdate = synth_currentTime();
-        synth_appPollEvents(currentUpdate);
-        synth_updateBuffer(lastUpdate, currentUpdate - lastUpdate);
-        lastUpdate = currentUpdate;
+        const double currentTime = synth_currentTime();
+        synth_appPollEvents(currentTime);
+        synth_updateBuffer(lastUpdate, currentTime - lastUpdate);
+        lastUpdate = currentTime;
     }
 }
 
