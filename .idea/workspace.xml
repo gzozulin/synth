@@ -12,18 +12,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b32eaf2-b80b-4c15-856b-171b725bb614" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/c11threads.h" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/main.c.o" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/synth" afterPath="$PROJECT_DIR$/cmake-build-debug/synth" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CMakeLists.txt" afterPath="$PROJECT_DIR$/CMakeLists.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeCache.txt" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeCache.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Makefile.cmake" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Makefile.cmake" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/DependInfo.cmake" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/DependInfo.cmake" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/build.make" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/build.make" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/flags.make" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/flags.make" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/link.txt" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/link.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/synth.cbp" afterPath="$PROJECT_DIR$/cmake-build-debug/synth.cbp" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.c" afterPath="$PROJECT_DIR$/main.c" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -49,12 +39,12 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="222">
-              <caret line="350" column="1" lean-forward="true" selection-start-line="350" selection-start-column="1" selection-end-line="350" selection-end-column="1" />
+            <state relative-caret-position="504">
+              <caret line="28" column="60" lean-forward="true" selection-start-line="28" selection-start-column="60" selection-end-line="28" selection-end-column="60" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
-                <element signature="e#2743#3016#0" expanded="true" />
-                <element signature="e#11128#11195#0" expanded="true" />
+                <element signature="e#3220#3493#0" expanded="true" />
+                <element signature="e#11466#11533#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -73,8 +63,8 @@
       <file leaf-file-name="c11threads.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/c11threads.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4291">
-              <caret line="258" column="0" lean-forward="false" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
+            <state relative-caret-position="-209">
+              <caret line="35" column="28" lean-forward="true" selection-start-line="35" selection-start-column="28" selection-end-line="35" selection-end-column="28" />
               <folding>
                 <element signature="e#329#346#0" expanded="true" />
                 <element signature="e#510#598#0" expanded="true" />
@@ -95,10 +85,14 @@
       <find>__DBL_EPSILON__</find>
       <find>200</find>
       <find>startTime</find>
+      <find>dSustainAmplitude</find>
+      <find>PI</find>
     </findStrings>
     <replaceStrings>
       <replace>float</replace>
       <replace>0.02</replace>
+      <replace>envelope-&gt;sustainAmplitude</replace>
+      <replace>M_PI</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -122,7 +116,7 @@
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="49" />
     <option name="y" value="-4" />
-    <option name="width" value="2511" />
+    <option name="width" value="1871" />
     <option name="height" value="1084" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -196,7 +190,7 @@
       <updated>1505221857717</updated>
       <workItem from="1505221859163" duration="10495000" />
       <workItem from="1505233485729" duration="33149000" />
-      <workItem from="1505556574427" duration="6130000" />
+      <workItem from="1505556574427" duration="12176000" />
     </task>
     <task id="LOCAL-00001" summary="Some fixes;">
       <created>1505488749748</created>
@@ -247,11 +241,25 @@
       <option name="project" value="LOCAL" />
       <updated>1505491609133</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Some fixes;">
+      <created>1505563104425</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1505563104426</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Some fixes;">
+      <created>1505565007622</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1505565007622</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="49774000" />
+    <option name="totallyTimeSpent" value="55820000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="49" y="-4" width="1871" height="1084" extended-state="6" />
@@ -292,7 +300,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="52" />
+      <option name="time" value="53" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
@@ -316,8 +324,8 @@
           <caret line="228" column="0" lean-forward="true" selection-start-line="228" selection-start-column="0" selection-end-line="228" selection-end-column="0" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#2743#3016#0" expanded="true" />
-            <element signature="e#11128#11195#0" expanded="true" />
+            <element signature="e#3220#3493#0" expanded="true" />
+            <element signature="e#11466#11533#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -334,6 +342,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3162">
           <caret line="186" column="44" lean-forward="false" selection-start-line="186" selection-start-column="44" selection-end-line="186" selection-end-column="44" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -350,8 +359,8 @@
           <caret line="72" column="29" lean-forward="true" selection-start-line="72" selection-start-column="29" selection-end-line="72" selection-end-column="29" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#2743#3016#0" expanded="true" />
-            <element signature="e#11128#11195#0" expanded="true" />
+            <element signature="e#3220#3493#0" expanded="true" />
+            <element signature="e#11466#11533#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -382,6 +391,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="377">
           <caret line="176" column="21" lean-forward="false" selection-start-line="176" selection-start-column="4" selection-end-line="176" selection-end-column="21" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -409,10 +419,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file:///usr/include/time.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="308">
+          <caret line="119" column="7" lean-forward="false" selection-start-line="119" selection-start-column="7" selection-end-line="119" selection-end-column="7" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/c11threads.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4291">
-          <caret line="258" column="0" lean-forward="false" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
+        <state relative-caret-position="-209">
+          <caret line="35" column="28" lean-forward="true" selection-start-line="35" selection-start-column="28" selection-end-line="35" selection-end-column="28" />
           <folding>
             <element signature="e#329#346#0" expanded="true" />
             <element signature="e#510#598#0" expanded="true" />
@@ -423,22 +441,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file:///usr/include/time.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="119" column="7" lean-forward="false" selection-start-line="119" selection-start-column="7" selection-end-line="119" selection-end-column="7" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="222">
-          <caret line="350" column="1" lean-forward="true" selection-start-line="350" selection-start-column="1" selection-end-line="350" selection-end-column="1" />
+        <state relative-caret-position="504">
+          <caret line="28" column="60" lean-forward="true" selection-start-line="28" selection-start-column="60" selection-end-line="28" selection-end-column="60" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#2743#3016#0" expanded="true" />
-            <element signature="e#11128#11195#0" expanded="true" />
+            <element signature="e#3220#3493#0" expanded="true" />
+            <element signature="e#11466#11533#0" expanded="true" />
           </folding>
         </state>
       </provider>
