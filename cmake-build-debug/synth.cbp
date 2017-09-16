@@ -45,7 +45,6 @@
 				<Option compiler="gcc"/>
 				<Compiler>
 					<Add directory="/usr/local/include/SDL2"/>
-					<Add directory="/usr/include/SDL2"/>
 					<Add directory="/usr/include/c++/4.8"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/4.8"/>
 					<Add directory="/usr/include/c++/4.8/backward"/>
@@ -70,7 +69,6 @@
 				<Option compiler="gcc"/>
 				<Compiler>
 					<Add directory="/usr/local/include/SDL2"/>
-					<Add directory="/usr/include/SDL2"/>
 					<Add directory="/usr/include/c++/4.8"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/4.8"/>
 					<Add directory="/usr/include/c++/4.8/backward"/>
@@ -88,6 +86,9 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/grigory/synth/c11threads.h">
+			<Option target="synth"/>
+		</Unit>
 		<Unit filename="/home/grigory/synth/main.c">
 			<Option target="synth"/>
 		</Unit>
@@ -95,9 +96,6 @@
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
 		<Unit filename="/home/grigory/synth/cmake/FindSDL2.cmake">
-			<Option virtualFolder="CMake Files\cmake\"/>
-		</Unit>
-		<Unit filename="/home/grigory/synth/cmake/FindSDL2_image.cmake">
 			<Option virtualFolder="CMake Files\cmake\"/>
 		</Unit>
 	</Project>

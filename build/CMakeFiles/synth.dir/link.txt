@@ -1,0 +1,1 @@
+/usr/bin/cc   -pedantic -Wall -Werror -DUSE_C11_ATOMICS=1   CMakeFiles/synth.dir/main.c.o  -o synth /usr/local/lib/libSDL2main.a /usr/local/lib/libSDL2.so -lpthread -lm -Wl,-rpath,/usr/local/lib 

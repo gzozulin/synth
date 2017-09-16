@@ -6,5 +6,5 @@ C_FLAGS =  -pedantic -Wall -Werror -DUSE_C11_ATOMICS=1 -g   -std=gnu11
 
 C_DEFINES = 
 
-C_INCLUDES = -I/usr/local/include/SDL2 -I/usr/include/SDL2 
+C_INCLUDES = -I/usr/local/include/SDL2 
 

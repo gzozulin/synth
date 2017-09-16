@@ -1,1 +1,1 @@
-/usr/bin/cc  -pedantic -Wall -Werror -DUSE_C11_ATOMICS=1 -g   CMakeFiles/synth.dir/main.c.o  -o synth -Wl,-rpath,/usr/local/lib /usr/local/lib/libSDL2main.a /usr/local/lib/libSDL2.so -lpthread /usr/lib/x86_64-linux-gnu/libSDL2_image.so -lm 
+/usr/bin/cc  -pedantic -Wall -Werror -DUSE_C11_ATOMICS=1 -g   CMakeFiles/synth.dir/main.c.o  -o synth -Wl,-rpath,/usr/local/lib /usr/local/lib/libSDL2main.a /usr/local/lib/libSDL2.so -lpthread -lm 

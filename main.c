@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <float.h>
 
+#include "c11threads.h"
+
 #include "SDL2/SDL.h"
 
 // -------------------------- +Const --------------------------
@@ -11,8 +13,8 @@
 //#define       TESTS
 
 #define       FREQUENCY             44100
-#define       SAMPLES               1024
-#define       SAMPLE_TIME           (1000.0 / (double) FREQUENCY)
+#define       SAMPLES               256
+#define       SAMPLE_TIME           (1.0 / (double) FREQUENCY)
 
 SDL_Window    *g_window             = NULL;
 SDL_Renderer  *g_renderer           = NULL;
@@ -21,7 +23,10 @@ bool          g_quit                = false;
 
 #define       TIMESTAMP_NOT_SET     (-1L)
 
-bool          g_bufferFilledOnce   = false;
+bool          g_bufferFilledOnce    = false;
+
+#define       ONE_TICK              (1.0 / 60.0)
+#define       SAMPLES_FOR_TICK      (ONE_TICK / SAMPLE_TIME)
 
 // -------------------------- +Macroses --------------------------
 
@@ -143,6 +148,7 @@ void synth_envelopeNoteOn(struct synth_Envelope *envelope, double time)
 void synth_envelopeNoteOff(struct synth_Envelope *envelope, double time)
 {
     assert(envelope != 0);
+    envelope->offTimestamp = TIMESTAMP_NOT_SET;
     envelope->offTimestamp = time;
     envelope->noteOn = false;
 }
@@ -157,7 +163,7 @@ double synth_oscillate(enum synth_WaveType type, double frequency, double time)
             return sin(synth_convertFrequency(frequency) * time) > 0.0 ? 1.0 : -1.0;
         }
         case WAVE_TYPE_TRIANGLE: {
-            return asin(sin(synth_convertFrequency(frequency) * time) * 2.0 / M_PI);
+            return asin(sin(synth_convertFrequency(frequency) * time)) * (2.0 / M_PI);
         }
         case WAVE_TYPE_SAW_ANALOGUE: {
             double output = 0.0;
@@ -214,15 +220,13 @@ short synth_oscCreateSample(struct synth_Envelope *envelope, double masterVolume
     );
 }
 
-void synth_updateBuffer(double startTime, double *updateAccum)
+void synth_appendBufferForOneTick(double start)
 {
-    double time = startTime;
-    while (*updateAccum > SAMPLE_TIME) {
-        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, time));
-        *updateAccum -= SAMPLE_TIME;
-        time += SAMPLE_TIME;
+    for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
+        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, start + s * SAMPLE_TIME));
     }
-    g_bufferFilledOnce = true;
+    g_bufferFilledOnce = true; // todo: not true! Only part
+
 }
 
 // -------------------------- +Audio --------------------------
@@ -261,9 +265,17 @@ void synth_audioDevicePrepare()
 
 // -------------------------- +Application --------------------------
 
-double synth_currentTime()
+double synth_appGetTime()
 {
     return (double) SDL_GetTicks() / 1000.0;
+}
+
+void synth_appSleep(double seconds)
+{
+    const long millis = (const long) (seconds * 1e+6);
+    const long nanos = millis * 1000L;
+    struct timespec ts = { .tv_sec = 0, .tv_nsec = nanos };
+    thrd_sleep(&ts, NULL);
 }
 
 void synth_appWinCreate()
@@ -314,25 +326,48 @@ void synth_appPollEvents(double time)
             g_quit = true;
         } else if (event.type == SDL_KEYDOWN) {
             synth_appHandleKeyDown(event.key.keysym.sym, time);
-        } else if (event.type == SDL_KEYUP && event.key.keysym.sym == ' ') {
+        } else if (event.type == SDL_KEYUP) {
             synth_appHandleKeyUp(event.key.keysym.sym, time);
         }
     }
 }
 
-void synth_appRunLoop()
+void synth_appUpdateFps()
 {
-    logi("synth_appRunLoop()");
-    double updateAccumulator = 0.0;
-    double lastUpdate = synth_currentTime();
-    while (!g_quit) {
-        const double currentTime = synth_currentTime();
-        updateAccumulator += (currentTime - lastUpdate);
-        synth_appPollEvents(currentTime);
-        synth_updateBuffer(lastUpdate, &updateAccumulator);
-        lastUpdate = currentTime;
+    static char title[32];
+    static int fps = 0;
+    static int lastSecond = 0;
+    fps++;
+    const int second = (const int) synth_appGetTime();
+    if (lastSecond != second) {
+        sprintf(title, "Synthesizer, fps: %d", fps);
+        SDL_SetWindowTitle(g_window, title);
+        lastSecond = second;
+        fps = 0;
     }
 }
+
+void synth_appRunLoop()
+{
+    logi("synth_appRunLoop() called");
+    double accumulator = 0.0;
+    double last = synth_appGetTime();
+    while (!g_quit) {
+        const double current = synth_appGetTime();
+        synth_appPollEvents(current);
+        const double elapsed = current - last;
+        accumulator += elapsed;
+        int tick = 0;
+        while (accumulator  >= ONE_TICK) {
+            synth_appUpdateFps();
+            synth_appendBufferForOneTick(last + tick * ONE_TICK);
+            accumulator -= ONE_TICK;
+            tick++;
+        }
+        last = current;
+    }
+}
+
 
 // -------------------------- +Main --------------------------
 

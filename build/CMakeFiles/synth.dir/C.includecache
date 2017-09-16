@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/grigory/synth/main.c
+stdbool.h
+-
+math.h
+-
+limits.h
+-
+assert.h
+-
+float.h
+-
+SDL2/SDL.h
+/home/grigory/synth/SDL2/SDL.h
+

@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/grigory/synth/main.c" "/home/grigory/synth/cmake-build-debug/CMakeFiles/synth.dir/main.c.o"
+  "/home/grigory/synth/main.c" "/home/grigory/synth/build/CMakeFiles/synth.dir/main.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
