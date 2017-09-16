@@ -28,6 +28,8 @@ bool          g_quit                = false;
 
 #define       MASTER_VOLUME         0.4f
 
+#define       AUDIO_DEV_ID          1
+
 // -------------------------- +Macroses --------------------------
 
 void                    synth_audioUpdateAudioLock();
@@ -63,52 +65,6 @@ extern inline float     synth_calculateFrequency(int note) // octave??
 #define SDL_FAIL() { printf("%.2f -> SDL_ERROR -> %s:%d -> %s\n", synth_appGetTime(), __FILE__, __LINE__, SDL_GetError()); exit(-1); }
 #define SDL_ENFORCE(expr) { if ((expr) < 0)  SDL_FAIL(); }
 #define SDL_ENFORCE_PTR(ptr) { if ((ptr) == NULL) SDL_FAIL(); }
-
-// -------------------------- +RingBuffer --------------------------
-
-#define RING_BUFFER_SIZE 2048
-float g_ringBuffer[RING_BUFFER_SIZE];
-
-uint g_ringBufferWriteCursor = 0;
-uint g_ringBufferReadCursor = 0;
-
-void synth_ringBufferClear()
-{
-    memset(g_ringBuffer, 0, sizeof(g_ringBuffer));
-}
-
-void synth_ringBufferWriteOne(float value)
-{
-    g_ringBuffer[g_ringBufferWriteCursor] = value;
-    g_ringBufferWriteCursor = (g_ringBufferWriteCursor + 1) % RING_BUFFER_SIZE;
-    //logfmt("write %d\n", g_ringBufferWriteCursor);
-}
-
-void synth_ringBufferReadMany(float *dest, int length)
-{
-    assert(dest != 0);
-    const int left = RING_BUFFER_SIZE - g_ringBufferReadCursor;
-    const int before = synth_min(length, left);
-    const int after = length - before;
-    memcpy(dest, g_ringBuffer + g_ringBufferReadCursor,  before * sizeof(float));
-    g_ringBufferReadCursor = (g_ringBufferReadCursor + before) % RING_BUFFER_SIZE;
-    if (after > 0) {
-        synth_ringBufferReadMany(dest + before, after);
-    }
-    //logfmt("read %d\n", g_ringBufferReadCursor);
-}
-
-#ifdef TESTS
-void synth_ringBufferTests()
-{
-    float dest[2048];
-    memset(g_ringBuffer, 0, sizeof(g_ringBuffer));
-    g_ringBufferReadCursor = 75;
-    synth_ringBufferReadMany(dest, 125);
-    synth_ringBufferReadMany(dest, 25);
-    assert(g_ringBufferReadCursor == 25);
-}
-#endif
 
 // -------------------------- +Oscillator --------------------------
 
@@ -219,38 +175,24 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
 
 float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
 {
-    return MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency, time);
-}
-
-void synth_appendBufferForOneTick(float start)
-{
-    for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
-        const float time = start + s * SAMPLE_TIME;
-        const float sample = synth_oscCreateSample(&g_envelope, time);
-        //logfmt("%f: sample #%d -> %f\n", time, g_ringBufferWriteCursor, sample);
-        synth_ringBufferWriteOne(sample);
-    }
-    synth_audioUpdateAudioLock();
+    return MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) *
+            (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE , g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 0.5f, time));
 }
 
 // -------------------------- +Audio --------------------------
 
-void synth_audioUpdateAudioLock()
+void synth_audioAppendBufferForOneTick(SDL_AudioDeviceID dev, float start)
 {
-    static bool haveEnoughSample = false;
-    if (!haveEnoughSample) {
-        static int samplesFilled = 0;
-        samplesFilled += SAMPLES_FOR_TICK;
-        if (samplesFilled >= SAMPLES) {
-            haveEnoughSample = true;
-            SDL_UnlockAudio();
-        }
+    const uint size = (int) SAMPLES_FOR_TICK * sizeof(float);
+    float *buffer = malloc(size); // make static
+    for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
+        const float time = start + s * SAMPLE_TIME;
+        const float sample = synth_oscCreateSample(&g_envelope, time);
+        //logfmt("%f: sample #%d -> %f\n", time, g_ringBufferWriteCursor, sample);
+        buffer[s] = sample;
     }
-}
-
-void synth_audioDeviceCallback(void *userData, Uint8 *data, int length)
-{
-    synth_ringBufferReadMany((float *) data, SAMPLES);
+    SDL_ENFORCE(SDL_QueueAudio(dev, buffer, size));
+    free(buffer);
 }
 
 void synth_audioDeviceList()
@@ -282,7 +224,7 @@ void synth_audioDevicePrepare()
     asked.format = AUDIO_F32;
     asked.channels = 1;
     asked.samples = SAMPLES;
-    asked.callback = synth_audioDeviceCallback;
+    asked.callback = NULL;
     SDL_ENFORCE(SDL_OpenAudio(&asked, &received));
     logi("Asked:\n")
     synth_audioDevicePrintSpec(&asked);
@@ -374,7 +316,7 @@ void synth_appRunLoop()
         int tick = 0;
         while (accumulator  >= ONE_TICK) {
             synth_appUpdateFps();
-            synth_appendBufferForOneTick(last + tick * ONE_TICK);
+            synth_audioAppendBufferForOneTick(AUDIO_DEV_ID, last + tick * ONE_TICK);
             accumulator -= ONE_TICK;
             tick++;
         }
@@ -391,10 +333,8 @@ int main()
     synth_ringBufferTests();
     return 0;
 #else
-    synth_ringBufferClear();
     synth_appWinCreate();
     synth_audioDevicePrepare();
-    SDL_LockAudio();
     SDL_PauseAudio(0);
     synth_appRunLoop();
     SDL_CloseAudio();
