@@ -135,7 +135,7 @@ struct synth_Envelope
     bool noteOn;
 };
 
-struct synth_Envelope g_envelope = { 0.1f, 0.01f, 0.2f, 1.0f, 0.8f, 0L, 0L, false };
+struct synth_Envelope g_envelope = { 0.01f, 0.1f, 0.2f, 1.0f, 0.7f, 0L, 0L, false };
 
 void synth_envelopeNoteOn(struct synth_Envelope *envelope, float time)
 {
@@ -181,18 +181,21 @@ float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
 
 // -------------------------- +Audio --------------------------
 
+float *g_audioBuffer = NULL;
+
 void synth_audioAppendBufferForOneTick(SDL_AudioDeviceID dev, float start)
 {
     const uint size = (int) SAMPLES_FOR_TICK * sizeof(float);
-    float *buffer = malloc(size); // make static
+    if (g_audioBuffer == NULL) {
+        g_audioBuffer = malloc(size);
+    }
     for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
         const float time = start + s * SAMPLE_TIME;
         const float sample = synth_oscCreateSample(&g_envelope, time);
         //logfmt("%f: sample #%d -> %f\n", time, g_ringBufferWriteCursor, sample);
-        buffer[s] = sample;
+        g_audioBuffer[s] = sample;
     }
-    SDL_ENFORCE(SDL_QueueAudio(dev, buffer, size));
-    free(buffer);
+    SDL_ENFORCE(SDL_QueueAudio(dev, g_audioBuffer, size));
 }
 
 void synth_audioDeviceList()
