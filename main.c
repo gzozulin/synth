@@ -13,7 +13,7 @@
 //#define       TESTS
 
 #define       FREQUENCY             44100
-#define       SAMPLES               256
+#define       SAMPLES               512
 #define       SAMPLE_TIME           (1.0f / (float) FREQUENCY)
 
 SDL_Window    *g_window             = NULL;
@@ -37,13 +37,13 @@ extern inline float     synth_appGetTime()
     return (float) SDL_GetTicks() / 1000.0f;
 }
 
-extern inline void      synth_appSleep(float seconds)
+/*extern inline void      synth_appSleep(float seconds)
 {
     const long millis = (const long) (seconds * 1e+6);
     const long nanos = millis * 1000L;
     struct timespec ts = { .tv_sec = 0, .tv_nsec = nanos };
     thrd_sleep(&ts, NULL);
-}
+}*/
 
 extern inline int       synth_min(const int x, const int y) { return y < x ? y : x; }
 extern inline float     synth_convertFrequency(float hertz) { return hertz * 2.0f * F_PI; }
@@ -59,7 +59,6 @@ extern inline float     synth_calculateFrequency(int note) // octave??
 #define logfmt(fmt, ...) printf(fmt, __VA_ARGS__)
 #define logi(what) { printf("%.2f -> INFO -> %s:%d %s\n", synth_appGetTime(), __FILE__, __LINE__, what); }
 #define loge(what) { printf("%.2f -> ERROR -> %s:%d %s\n", synth_appGetTime(), __FILE__, __LINE__, what); exit(-1); }
-#undef  printf // todo: not working
 
 #define SDL_FAIL() { printf("%.2f -> SDL_ERROR -> %s:%d -> %s\n", synth_appGetTime(), __FILE__, __LINE__, SDL_GetError()); exit(-1); }
 #define SDL_ENFORCE(expr) { if ((expr) < 0)  SDL_FAIL(); }
@@ -81,22 +80,22 @@ void synth_ringBufferClear()
 void synth_ringBufferWriteOne(float value)
 {
     g_ringBuffer[g_ringBufferWriteCursor] = value;
-    g_ringBufferWriteCursor++;
-    g_ringBufferWriteCursor %= RING_BUFFER_SIZE;
+    g_ringBufferWriteCursor = (g_ringBufferWriteCursor + 1) % RING_BUFFER_SIZE;
+    //logfmt("write %d\n", g_ringBufferWriteCursor);
 }
 
-void synth_ringBufferReadMany(float *dest, int num)
+void synth_ringBufferReadMany(float *dest, int length)
 {
     assert(dest != 0);
     const int left = RING_BUFFER_SIZE - g_ringBufferReadCursor;
-    const int before = synth_min(num, left);
-    const int after = num - before;
-    memcpy(dest, g_ringBuffer + g_ringBufferReadCursor, before * sizeof(float));
+    const int before = synth_min(length, left);
+    const int after = length - before;
+    memcpy(dest, g_ringBuffer + g_ringBufferReadCursor,  before * sizeof(float));
+    g_ringBufferReadCursor = (g_ringBufferReadCursor + before) % RING_BUFFER_SIZE;
     if (after > 0) {
         synth_ringBufferReadMany(dest + before, after);
     }
-    g_ringBufferReadCursor += before;
-    g_ringBufferReadCursor %= RING_BUFFER_SIZE;
+    //logfmt("read %d\n", g_ringBufferReadCursor);
 }
 
 #ifdef TESTS
@@ -155,7 +154,7 @@ float synth_oscillate(enum synth_WaveType type, float frequency, float time)
             return output * (2.0f / F_PI);
         }
         case WAVE_TYPE_SAW_DIGITAL: {
-            return (2.0f / F_PI) * (frequency * F_PI * fmodf(time, 1.0f / frequency) - (F_PI / 2.0f));
+            return  (2.0f / F_PI) * (frequency * F_PI * fmodf(time, 1.0f / frequency) - (F_PI / 2.0f));
         }
         case WAVE_TYPE_NOISE: {
             return 2.0f * ((float) rand() / (float) RAND_MAX) - 1.0f;
@@ -220,14 +219,16 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
 
 float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
 {
-    return  MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) *
-                    (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SINE, g_baseFrequency * 0.5f, time));
+    return MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency, time);
 }
 
 void synth_appendBufferForOneTick(float start)
 {
     for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
-        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, start + s * SAMPLE_TIME));
+        const float time = start + s * SAMPLE_TIME;
+        const float sample = synth_oscCreateSample(&g_envelope, time);
+        //logfmt("%f: sample #%d -> %f\n", time, g_ringBufferWriteCursor, sample);
+        synth_ringBufferWriteOne(sample);
     }
     synth_audioUpdateAudioLock();
 }
@@ -261,23 +262,32 @@ void synth_audioDeviceList()
     }
 }
 
+void synth_audioDevicePrintSpec(SDL_AudioSpec *spec)
+{
+    assert(spec != NULL);
+    logfmt("Received freq: %d\n", spec->freq);
+    logfmt("Received format: %d\n", spec->format);
+    logfmt("Received channels: %d\n", spec->channels);
+    logfmt("Received samples: %d\n", spec->samples);
+}
+
 void synth_audioDevicePrepare()
 {
     logi("synth_audioDevicePrepare()");
     synth_audioDeviceList();
-    SDL_AudioSpec want, received;
-    memset(&want, 0, sizeof(want));
+    SDL_AudioSpec asked, received;
+    memset(&asked, 0, sizeof(asked));
     memset(&received, 0, sizeof(received));
-    want.freq = FREQUENCY;
-    want.format = AUDIO_F32;
-    want.channels = 1;
-    want.samples = SAMPLES;
-    want.callback = synth_audioDeviceCallback;
-    SDL_ENFORCE(SDL_OpenAudio(&want, &received));
-    logfmt("Received freq: %d\n", received.freq);
-    logfmt("Received format: %d\n", received.format);
-    logfmt("Received channels: %d\n", received.channels);
-    logfmt("Received samples: %d\n", received.samples);
+    asked.freq = FREQUENCY;
+    asked.format = AUDIO_F32;
+    asked.channels = 1;
+    asked.samples = SAMPLES;
+    asked.callback = synth_audioDeviceCallback;
+    SDL_ENFORCE(SDL_OpenAudio(&asked, &received));
+    logi("Asked:\n")
+    synth_audioDevicePrintSpec(&asked);
+    logi("Received:\n")
+    synth_audioDevicePrintSpec(&received);
 }
 
 // -------------------------- +Application --------------------------
