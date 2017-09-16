@@ -23,21 +23,25 @@ bool          g_quit                = false;
 
 #define       TIMESTAMP_NOT_SET     (-1L)
 
-bool          g_bufferFilledOnce    = false;
+bool          g_haveEnoughSamples    = false;
 
 #define       ONE_TICK              (1.0 / 60.0)
 #define       SAMPLES_FOR_TICK      (ONE_TICK / SAMPLE_TIME)
 
 // -------------------------- +Macroses --------------------------
 
-#define logfmt(fmt, ...) printf(fmt, __VA_ARGS__)
-#define logi(what) { printf("INFO -> %s:%d %s\n", __FILE__, __LINE__, what); }
-#define loge(what) { printf("ERROR -> %s:%d %s\n", __FILE__, __LINE__, what); exit(-1); }
-#undef  printf // todo: not working
+extern inline double    synth_appGetTime()
+{
+    return (double) SDL_GetTicks() / 1000.0;
+}
 
-#define SDL_FAIL() { printf("SDL_ERROR -> %s:%d -> %s\n", __FILE__, __LINE__, SDL_GetError()); exit(-1); }
-#define SDL_ENFORCE(expr) { if ((expr) < 0)  SDL_FAIL(); }
-#define SDL_ENFORCE_PTR(ptr) { if ((ptr) == NULL) SDL_FAIL(); }
+extern inline void      synth_appSleep(double seconds)
+{
+    const long millis = (const long) (seconds * 1e+6);
+    const long nanos = millis * 1000L;
+    struct timespec ts = { .tv_sec = 0, .tv_nsec = nanos };
+    thrd_sleep(&ts, NULL);
+}
 
 extern inline int       synth_min(const int x, const int y) { return y < x ? y : x; }
 extern inline double    synth_convertFrequency(double herz) { return herz * 2.0 * M_PI; }
@@ -50,9 +54,18 @@ extern inline double    synth_calculateFrequency(int note) // octave??
     return baseFrequency * pow(twelwthRootOf2, note);
 }
 
+#define logfmt(fmt, ...) printf(fmt, __VA_ARGS__)
+#define logi(what) { printf("%.2f -> INFO -> %s:%d %s\n", synth_appGetTime(), __FILE__, __LINE__, what); }
+#define loge(what) { printf("%.2f -> ERROR -> %s:%d %s\n", synth_appGetTime(), __FILE__, __LINE__, what); exit(-1); }
+#undef  printf // todo: not working
+
+#define SDL_FAIL() { printf("%.2f -> SDL_ERROR -> %s:%d -> %s\n", synth_appGetTime(), __FILE__, __LINE__, SDL_GetError()); exit(-1); }
+#define SDL_ENFORCE(expr) { if ((expr) < 0)  SDL_FAIL(); }
+#define SDL_ENFORCE_PTR(ptr) { if ((ptr) == NULL) SDL_FAIL(); }
+
 // -------------------------- +RingBuffer --------------------------
 
-#define RING_BUFFER_SIZE 100
+#define RING_BUFFER_SIZE 2048
 short g_ringBuffer[RING_BUFFER_SIZE];
 
 uint g_ringBufferWriteCursor = 0;
@@ -141,14 +154,12 @@ void synth_envelopeNoteOn(struct synth_Envelope *envelope, double time)
 {
     assert(envelope != 0);
     envelope->onTimestamp = time;
-    envelope->offTimestamp = TIMESTAMP_NOT_SET;
     envelope->noteOn = true;
 }
 
 void synth_envelopeNoteOff(struct synth_Envelope *envelope, double time)
 {
     assert(envelope != 0);
-    envelope->offTimestamp = TIMESTAMP_NOT_SET;
     envelope->offTimestamp = time;
     envelope->noteOn = false;
 }
@@ -186,23 +197,24 @@ double synth_oscillate(enum synth_WaveType type, double frequency, double time)
 double synth_envelopeGetAmplitude(struct synth_Envelope *envelope, double time)
 {
     assert(envelope != 0);
-    double amplitude = 0.0;
-    if (!envelope->noteOn && time > (envelope->offTimestamp + envelope->releaseTime)) {
-        return amplitude;
-    }
+    double amplitude;
     if (envelope->noteOn) {
         const double lifetime = time - envelope->onTimestamp;
         assert(lifetime >= 0.0);
         if (lifetime <= envelope->attackTime) { // A
+            logi("a");
             amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
         } else if (lifetime <= (envelope->attackTime + envelope->decayTime)) { // D
+            logi("d");
             amplitude =
                     ((lifetime - envelope->attackTime) / envelope->decayTime) *
                     (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
         } else { // S
+            logi("s");
             amplitude = envelope->sustainAmplitude;
         }
     } else { // R
+        logi("r");
         amplitude = ((time - envelope->offTimestamp) / envelope->releaseTime) * (0.0 - envelope->sustainAmplitude) + envelope->sustainAmplitude;
     }
     if (amplitude < DBL_EPSILON) {
@@ -225,15 +237,20 @@ void synth_appendBufferForOneTick(double start)
     for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
         synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, start + s * SAMPLE_TIME));
     }
-    g_bufferFilledOnce = true; // todo: not true! Only part
-
+    if (!g_haveEnoughSamples) {
+        static int samplesFilled = 0;
+        samplesFilled++;
+        if (samplesFilled >= SAMPLES) {
+            g_haveEnoughSamples = true;
+        }
+    }
 }
 
 // -------------------------- +Audio --------------------------
 
 void synth_audioDeviceCallback(void *userData, Uint8 *data, int length)
 {
-    if (g_bufferFilledOnce) {
+    if (g_haveEnoughSamples) {
         synth_ringBufferReadMany((short *) data, SAMPLES);
     } else {
         memset(data, 0, (size_t) length);
@@ -253,30 +270,22 @@ void synth_audioDevicePrepare()
 {
     logi("synth_audioDevicePrepare()");
     synth_audioDeviceList();
-    SDL_AudioSpec want;
+    SDL_AudioSpec want, received;
     memset(&want, 0, sizeof(want));
+    memset(&received, 0, sizeof(received));
     want.freq = FREQUENCY;
     want.format = AUDIO_S16;
     want.channels = 1;
     want.samples = SAMPLES;
     want.callback = synth_audioDeviceCallback;
-    SDL_ENFORCE(SDL_OpenAudio(&want, 0));
+    SDL_ENFORCE(SDL_OpenAudio(&want, &received));
+    logfmt("Received freq: %d\n", received.freq);
+    logfmt("Received format: %d\n", received.format);
+    logfmt("Received channels: %d\n", received.channels);
+    logfmt("Received samples: %d\n", received.samples);
 }
 
 // -------------------------- +Application --------------------------
-
-double synth_appGetTime()
-{
-    return (double) SDL_GetTicks() / 1000.0;
-}
-
-void synth_appSleep(double seconds)
-{
-    const long millis = (const long) (seconds * 1e+6);
-    const long nanos = millis * 1000L;
-    struct timespec ts = { .tv_sec = 0, .tv_nsec = nanos };
-    thrd_sleep(&ts, NULL);
-}
 
 void synth_appWinCreate()
 {
@@ -367,7 +376,6 @@ void synth_appRunLoop()
         last = current;
     }
 }
-
 
 // -------------------------- +Main --------------------------
 

@@ -6,6 +6,18 @@
 
 #IncludeRegexTransform: 
 
+/home/grigory/synth/c11threads.h
+time.h
+-
+errno.h
+-
+pthread.h
+-
+sched.h
+-
+sys/time.h
+-
+
 /home/grigory/synth/main.c
 stdbool.h
 -
@@ -17,6 +29,8 @@ assert.h
 -
 float.h
 -
+c11threads.h
+/home/grigory/synth/c11threads.h
 SDL2/SDL.h
 /home/grigory/synth/SDL2/SDL.h
 
