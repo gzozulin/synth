@@ -32,8 +32,6 @@ bool          g_quit                = false;
 
 // -------------------------- +Macroses --------------------------
 
-void                    synth_audioUpdateAudioLock();
-
 extern inline float     synth_appGetTime()
 {
     return (float) SDL_GetTicks() / 1000.0f;
@@ -47,9 +45,7 @@ extern inline float     synth_appGetTime()
     thrd_sleep(&ts, NULL);
 }*/
 
-extern inline int       synth_min(const int x, const int y) { return y < x ? y : x; }
 extern inline float     synth_convertFrequency(float hertz) { return hertz * 2.0f * F_PI; }
-//extern inline short     synth_convertWave(float wave) { return (short) (SHRT_MAX * wave); }
 
 extern inline float     synth_calculateFrequency(int note) // octave??
 {
@@ -113,7 +109,7 @@ float synth_oscillate(enum synth_WaveType type, float frequency, float time)
             return  (2.0f / F_PI) * (frequency * F_PI * fmodf(time, 1.0f / frequency) - (F_PI / 2.0f));
         }
         case WAVE_TYPE_NOISE: {
-            return 2.0f * ((float) rand() / (float) RAND_MAX) - 1.0f;
+            return 2.0f * ((float) random() / (float) RAND_MAX) - 1.0f;
         }
     }
     loge("Unknown function type");
@@ -175,6 +171,7 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
 
 float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
 {
+    assert(envelope != NULL);
     return MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) *
             (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE , g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 0.5f, time));
 }
