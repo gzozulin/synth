@@ -131,7 +131,7 @@ struct synth_Envelope
     bool noteOn;
 };
 
-struct synth_Envelope g_envelope = { 0.01f, 0.1f, 0.2f, 1.0f, 0.7f, 0L, 0L, false };
+struct synth_Envelope g_envelope = { 0.01f, 0.1f, 0.5f, 1.0f, 0.6f, 0L, 0L, false };
 
 void synth_envelopeNoteOn(struct synth_Envelope *envelope, float time)
 {
