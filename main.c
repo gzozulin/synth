@@ -21,18 +21,18 @@ SDL_Renderer  *g_renderer           = NULL;
 
 bool          g_quit                = false;
 
-#define       TIMESTAMP_NOT_SET     (-1L)
-
-bool          g_haveEnoughSamples    = false;
-
 #define       ONE_TICK              (1.0f / 60.0f)
 #define       SAMPLES_FOR_TICK      (ONE_TICK / SAMPLE_TIME)
 
 #define       F_PI                  ((float) M_PI)
 
+#define       MASTER_VOLUME         0.4f
+
 // -------------------------- +Macroses --------------------------
 
-extern inline float    synth_appGetTime()
+void                    synth_audioUpdateAudioLock();
+
+extern inline float     synth_appGetTime()
 {
     return (float) SDL_GetTicks() / 1000.0f;
 }
@@ -46,10 +46,10 @@ extern inline void      synth_appSleep(float seconds)
 }
 
 extern inline int       synth_min(const int x, const int y) { return y < x ? y : x; }
-extern inline float    synth_convertFrequency(float hertz) { return hertz * 2.0f * F_PI; }
+extern inline float     synth_convertFrequency(float hertz) { return hertz * 2.0f * F_PI; }
 //extern inline short     synth_convertWave(float wave) { return (short) (SHRT_MAX * wave); }
 
-extern inline float    synth_calculateFrequency(int note) // octave??
+extern inline float     synth_calculateFrequency(int note) // octave??
 {
     const float baseFrequency = 110.0f; // A2
     const float twelwthRootOf2 = powf(2.0f, 1.0f / 12.0f);
@@ -75,7 +75,7 @@ uint g_ringBufferReadCursor = 0;
 
 void synth_ringBufferClear()
 {
-    memset(g_ringBuffer, 0, RING_BUFFER_SIZE * sizeof(short));
+    memset(g_ringBuffer, 0, sizeof(g_ringBuffer));
 }
 
 void synth_ringBufferWriteOne(float value)
@@ -92,18 +92,18 @@ void synth_ringBufferReadMany(float *dest, int num)
     const int before = synth_min(num, left);
     const int after = num - before;
     memcpy(dest, g_ringBuffer + g_ringBufferReadCursor, before * sizeof(float));
-    g_ringBufferReadCursor += before;
-    g_ringBufferReadCursor %= RING_BUFFER_SIZE;
     if (after > 0) {
         synth_ringBufferReadMany(dest + before, after);
     }
+    g_ringBufferReadCursor += before;
+    g_ringBufferReadCursor %= RING_BUFFER_SIZE;
 }
 
 #ifdef TESTS
 void synth_ringBufferTests()
 {
-    short dest[2048];
-    memset(g_ringBuffer, 0, sizeof(short) * RING_BUFFER_SIZE);
+    float dest[2048];
+    memset(g_ringBuffer, 0, sizeof(g_ringBuffer));
     g_ringBufferReadCursor = 75;
     synth_ringBufferReadMany(dest, 125);
     synth_ringBufferReadMany(dest, 25);
@@ -113,9 +113,9 @@ void synth_ringBufferTests()
 
 // -------------------------- +Oscillator --------------------------
 
-int     g_baseFrequencyIndex    = 0;
-float  g_baseFrequency         = 110.0;
-#define BASE_FREQUENCIES_NUM    10
+int         g_baseFrequencyIndex    = 0;
+float       g_baseFrequency         = 110.0f;
+#define     BASE_FREQUENCIES_NUM    10
 
 void synth_increaseBaseFrequency()
 {
@@ -148,7 +148,7 @@ float synth_oscillate(enum synth_WaveType type, float frequency, float time)
             return asinf(sinf(synth_convertFrequency(frequency) * time)) * (2.0f / F_PI);
         }
         case WAVE_TYPE_SAW_ANALOGUE: {
-            float output = 0.0;
+            float output = 0.0f;
             for (int n = 1; n < 100; n++) {
                 output += (sinf((float) n * synth_convertFrequency(frequency) * time)) / (float) n;
             }
@@ -162,7 +162,7 @@ float synth_oscillate(enum synth_WaveType type, float frequency, float time)
         }
     }
     loge("Unknown function type");
-    return 0.0;
+    return 0.0f;
 }
 
 struct synth_Envelope
@@ -180,7 +180,7 @@ struct synth_Envelope
     bool noteOn;
 };
 
-struct synth_Envelope g_envelope = { 0.01, 0.1, 0.2, 1.0, 0.8, TIMESTAMP_NOT_SET, TIMESTAMP_NOT_SET, false };
+struct synth_Envelope g_envelope = { 0.1f, 0.01f, 0.2f, 1.0f, 0.8f, 0L, 0L, false };
 
 void synth_envelopeNoteOn(struct synth_Envelope *envelope, float time)
 {
@@ -212,41 +212,44 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
     } else {
         amplitude = ((time - envelope->offTimestamp) / envelope->releaseTime) * (0.0f - envelope->sustainAmplitude) + envelope->sustainAmplitude;
     }
-    if (amplitude <= DBL_EPSILON) {
-        amplitude = 0.0;
+    if (amplitude <= FLT_EPSILON) {
+        amplitude = 0.0f;
     }
     return amplitude;
 }
 
-float synth_oscCreateSample(struct synth_Envelope *envelope, float masterVolume, float time)
+float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
 {
-    return masterVolume * synth_envelopeGetAmplitude(envelope, time) *
+    return  MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) *
                     (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SINE, g_baseFrequency * 0.5f, time));
 }
 
 void synth_appendBufferForOneTick(float start)
 {
     for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
-        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, 1.0, start + s * SAMPLE_TIME));
+        synth_ringBufferWriteOne(synth_oscCreateSample(&g_envelope, start + s * SAMPLE_TIME));
     }
-    if (!g_haveEnoughSamples) {
-        static int samplesFilled = 0;
-        samplesFilled += SAMPLES_FOR_TICK;
-        if (samplesFilled >= SAMPLES) {
-            g_haveEnoughSamples = true;
-        }
-    }
+    synth_audioUpdateAudioLock();
 }
 
 // -------------------------- +Audio --------------------------
 
+void synth_audioUpdateAudioLock()
+{
+    static bool haveEnoughSample = false;
+    if (!haveEnoughSample) {
+        static int samplesFilled = 0;
+        samplesFilled += SAMPLES_FOR_TICK;
+        if (samplesFilled >= SAMPLES) {
+            haveEnoughSample = true;
+            SDL_UnlockAudio();
+        }
+    }
+}
+
 void synth_audioDeviceCallback(void *userData, Uint8 *data, int length)
 {
-    if (g_haveEnoughSamples) {
-        synth_ringBufferReadMany((float *) data, SAMPLES);
-    } else {
-        memset(data, 0, (size_t) length);
-    }
+    synth_ringBufferReadMany((float *) data, SAMPLES);
 }
 
 void synth_audioDeviceList()
@@ -351,7 +354,7 @@ void synth_appUpdateFps()
 void synth_appRunLoop()
 {
     logi("synth_appRunLoop() called");
-    float accumulator = 0.0;
+    float accumulator = 0.0f;
     float last = synth_appGetTime();
     while (!g_quit) {
         const float current = synth_appGetTime();
@@ -378,10 +381,10 @@ int main()
     synth_ringBufferTests();
     return 0;
 #else
-    logi("main()");
     synth_ringBufferClear();
     synth_appWinCreate();
     synth_audioDevicePrepare();
+    SDL_LockAudio();
     SDL_PauseAudio(0);
     synth_appRunLoop();
     SDL_CloseAudio();

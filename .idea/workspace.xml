@@ -40,13 +40,23 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="812">
-              <caret line="227" column="1" lean-forward="true" selection-start-line="227" selection-start-column="1" selection-end-line="227" selection-end-column="1" />
+            <state relative-caret-position="331">
+              <caret line="209" column="51" lean-forward="true" selection-start-line="209" selection-start-column="51" selection-end-line="209" selection-end-column="51" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
-                <element signature="e#3220#3493#0" expanded="true" />
+                <element signature="e#3218#3479#0" expanded="true" />
                 <element signature="e#11338#11405#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SDL_audio.h" pinned="false" current-in-tab="false">
+        <entry file="file:///usr/local/include/SDL2/SDL_audio.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="204">
+              <caret line="113" column="17" lean-forward="false" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="17" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -89,6 +99,7 @@
       <find>dSustainAmplitude</find>
       <find>PI</find>
       <find>M_PI</find>
+      <find>.0</find>
     </findStrings>
     <replaceStrings>
       <replace>float</replace>
@@ -193,7 +204,7 @@
       <updated>1505221857717</updated>
       <workItem from="1505221859163" duration="10495000" />
       <workItem from="1505233485729" duration="33149000" />
-      <workItem from="1505556574427" duration="12425000" />
+      <workItem from="1505556574427" duration="16077000" />
     </task>
     <task id="LOCAL-00001" summary="Some fixes;">
       <created>1505488749748</created>
@@ -272,11 +283,18 @@
       <option name="project" value="LOCAL" />
       <updated>1505575136433</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Some fixes;">
+      <created>1505575318150</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1505575318150</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="56069000" />
+    <option name="totallyTimeSpent" value="59721000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="49" y="-4" width="1871" height="1084" extended-state="6" />
@@ -317,7 +335,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="53" />
+      <option name="time" value="59" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
@@ -341,7 +359,7 @@
           <caret line="228" column="0" lean-forward="true" selection-start-line="228" selection-start-column="0" selection-end-line="228" selection-end-column="0" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#3220#3493#0" expanded="true" />
+            <element signature="e#3218#3479#0" expanded="true" />
             <element signature="e#11338#11405#0" expanded="true" />
           </folding>
         </state>
@@ -376,7 +394,7 @@
           <caret line="72" column="29" lean-forward="true" selection-start-line="72" selection-start-column="29" selection-end-line="72" selection-end-column="29" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#3220#3493#0" expanded="true" />
+            <element signature="e#3218#3479#0" expanded="true" />
             <element signature="e#11338#11405#0" expanded="true" />
           </folding>
         </state>
@@ -401,14 +419,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2584">
           <caret line="152" column="16" lean-forward="false" selection-start-line="152" selection-start-column="16" selection-end-line="152" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/include/SDL2/SDL_audio.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="176" column="21" lean-forward="false" selection-start-line="176" selection-start-column="4" selection-end-line="176" selection-end-column="21" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -458,13 +468,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file:///usr/local/include/SDL2/SDL_audio.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="113" column="17" lean-forward="false" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="812">
-          <caret line="227" column="1" lean-forward="true" selection-start-line="227" selection-start-column="1" selection-end-line="227" selection-end-column="1" />
+        <state relative-caret-position="331">
+          <caret line="209" column="51" lean-forward="true" selection-start-line="209" selection-start-column="51" selection-end-line="209" selection-end-column="51" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
-            <element signature="e#3220#3493#0" expanded="true" />
+            <element signature="e#3218#3479#0" expanded="true" />
             <element signature="e#11338#11405#0" expanded="true" />
           </folding>
         </state>
