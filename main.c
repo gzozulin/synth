@@ -204,11 +204,9 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
     if (envelope->noteOn) {
         if (lifetime <= envelope->attackTime) {
             amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
-        }
-        if (lifetime > envelope->attackTime && lifetime <= (envelope->attackTime + envelope->decayTime)) {
+        } else if (lifetime <= (envelope->attackTime + envelope->decayTime)) {
             amplitude = ((lifetime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
-        }
-        if (lifetime > (envelope->attackTime + envelope->decayTime)) {
+        } else {
             amplitude = envelope->sustainAmplitude;
         }
     } else {
@@ -222,8 +220,7 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
 
 float synth_oscCreateSample(struct synth_Envelope *envelope, float masterVolume, float time)
 {
-    return masterVolume *
-                    synth_envelopeGetAmplitude(envelope, time) *
+    return masterVolume * synth_envelopeGetAmplitude(envelope, time) *
                     (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE, g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SINE, g_baseFrequency * 0.5f, time));
 }
 
