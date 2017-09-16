@@ -182,6 +182,7 @@ float *g_audioBuffer = NULL;
 
 void synth_audioAppendBufferForOneTick(SDL_AudioDeviceID dev, float start)
 {
+    // todo move it into one accumulator in app loop
     const uint size = (int) SAMPLES_FOR_TICK * sizeof(float);
     if (g_audioBuffer == NULL) {
         g_audioBuffer = malloc(size);
@@ -189,7 +190,6 @@ void synth_audioAppendBufferForOneTick(SDL_AudioDeviceID dev, float start)
     for (int s = 0; s < SAMPLES_FOR_TICK; ++s) {
         const float time = start + s * SAMPLE_TIME;
         const float sample = synth_oscCreateSample(&g_envelope, time);
-        //logfmt("%f: sample #%d -> %f\n", time, g_ringBufferWriteCursor, sample);
         g_audioBuffer[s] = sample;
     }
     SDL_ENFORCE(SDL_QueueAudio(dev, g_audioBuffer, size));
