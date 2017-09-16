@@ -199,7 +199,7 @@ void synth_envelopeNoteOff(struct synth_Envelope *envelope, float time)
 float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, float time)
 {
     assert(envelope != 0);
-    float amplitude = 0.0;
+    float amplitude;
     float lifetime = time - envelope->onTimestamp;
     if (envelope->noteOn) {
         if (lifetime <= envelope->attackTime) {
