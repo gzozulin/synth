@@ -12,10 +12,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9b32eaf2-b80b-4c15-856b-171b725bb614" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/main.c.o" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/synth.dir/main.c.o" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cmake-build-debug/synth" afterPath="$PROJECT_DIR$/cmake-build-debug/synth" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.c" afterPath="$PROJECT_DIR$/main.c" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -40,7 +37,7 @@
       <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="331">
+            <state relative-caret-position="223">
               <caret line="209" column="51" lean-forward="true" selection-start-line="209" selection-start-column="51" selection-end-line="209" selection-end-column="51" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
@@ -204,7 +201,7 @@
       <updated>1505221857717</updated>
       <workItem from="1505221859163" duration="10495000" />
       <workItem from="1505233485729" duration="33149000" />
-      <workItem from="1505556574427" duration="16077000" />
+      <workItem from="1505556574427" duration="16218000" />
     </task>
     <task id="LOCAL-00001" summary="Some fixes;">
       <created>1505488749748</created>
@@ -290,11 +287,18 @@
       <option name="project" value="LOCAL" />
       <updated>1505575318150</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Some fixes;">
+      <created>1505579435773</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1505579435773</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="59721000" />
+    <option name="totallyTimeSpent" value="59862000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="49" y="-4" width="1871" height="1084" extended-state="6" />
@@ -478,7 +482,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="331">
+        <state relative-caret-position="223">
           <caret line="209" column="51" lean-forward="true" selection-start-line="209" selection-start-column="51" selection-end-line="209" selection-end-column="51" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
