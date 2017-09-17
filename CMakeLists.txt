@@ -12,7 +12,7 @@ find_package(SDL2 REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIR})
 
-set(SOURCE_FILES main.c c11threads.h)
+set(SOURCE_FILES c11threads.h main2.c)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} m)

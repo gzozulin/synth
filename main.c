@@ -21,8 +21,8 @@ SDL_Renderer  *g_renderer           = NULL;
 
 bool          g_quit                = false;
 
-#define       ONE_TICK              (1.0f / 60.0f)
-#define       SAMPLES_FOR_TICK      (ONE_TICK / SAMPLE_TIME)
+#define       TICK_TIME              (1.0f / 60.0f)
+#define       SAMPLES_FOR_TICK      (TICK_TIME / SAMPLE_TIME)
 
 #define       F_PI                  ((float) M_PI)
 
@@ -49,7 +49,7 @@ extern inline float     synth_convertFrequency(float hertz) { return hertz * 2.0
 
 extern inline float     synth_calculateFrequency(int note) // octave??
 {
-    const float baseFrequency = 110.0f; // A2
+    const float baseFrequency = 220.0f; // A2
     const float twelwthRootOf2 = powf(2.0f, 1.0f / 12.0f);
     return baseFrequency * powf(twelwthRootOf2, note);
 }
@@ -131,7 +131,7 @@ struct synth_Envelope
     bool noteOn;
 };
 
-struct synth_Envelope g_envelope = { 0.01f, 0.1f, 0.5f, 1.0f, 0.6f, 0L, 0L, false };
+struct synth_Envelope g_envelope = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f, 0L, 0L, false };
 
 void synth_envelopeNoteOn(struct synth_Envelope *envelope, float time)
 {
@@ -173,7 +173,11 @@ float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
 {
     assert(envelope != NULL);
     return MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) *
-            (synth_oscillate(WAVE_TYPE_SAW_ANALOGUE , g_baseFrequency, time) + synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 0.5f, time));
+            (
+                    + 0.5f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 2.0f, time)
+                    + 1.0f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 3.0f, time)
+                    + 0.25f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 4.0f, time)
+            );
 }
 
 // -------------------------- +Audio --------------------------
@@ -314,10 +318,10 @@ void synth_appRunLoop()
         const float elapsed = current - last;
         accumulator += elapsed;
         int tick = 0;
-        while (accumulator  >= ONE_TICK) {
+        while (accumulator  >= TICK_TIME) {
             synth_appUpdateFps();
-            synth_audioAppendBufferForOneTick(AUDIO_DEV_ID, last + tick * ONE_TICK);
-            accumulator -= ONE_TICK;
+            synth_audioAppendBufferForOneTick(AUDIO_DEV_ID, last + tick * TICK_TIME);
+            accumulator -= TICK_TIME;
             tick++;
         }
         last = current;
