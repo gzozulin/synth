@@ -341,16 +341,84 @@ void synth_appWinCreate()
     SDL_RenderPresent(g_renderer);
 }
 
+#define KEYS_NUM 16
+const char *g_keys = "zsxcfvgbnjmk\xbcl\xbe\xbf";
+
 void synth_appHandleKey(SDL_Keycode sym, bool pressed, FTYPE time)
 {
-    switch (sym) {
-        case ' ': {
-
-            break;
+    for (int k = 0; k < KEYS_NUM; k++)
+    {
+        char key = g_keys[k];
+        if (sym != key) {
+            continue;
         }
-        default: {
-            break;
-        };
+
+
+        // Check if note already exists in currently playing notes
+        //muxNotes.lock();
+        //auto noteFound = find_if(vecNotes.begin(), vecNotes.end(), [&k](synth::note const& item) { return item.id == k; });
+
+
+        struct synth_Note *note = NULL;
+        for (int i = 0; i < NOTES_NUM; ++i) {
+            note = g_notes[i];
+            if (note != NULL && note->id == k) {
+                break;
+            }
+        }
+
+
+        if (note == NULL)
+        {
+            // Note not found in vector
+
+            if (pressed)
+            {
+                // Key has been pressed so create a new note
+
+                for (int i = 0; i < NOTES_NUM; i++) {
+
+                    if (g_notes[i] == NULL) {
+                        g_notes[i] = malloc(sizeof(struct synth_Note));
+
+                        g_notes[i]->id = k;
+                        g_notes[i]->on = time;
+                        g_notes[i]->channel = 1;
+                        g_notes[i]->active = true;
+
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Note not in vector, but key has been released...
+                // ...nothing to do
+            }
+        }
+        else
+        {
+            // Note exists in vector
+            if (pressed)
+            {
+                // Key is still held, so do nothing
+                if (note->off > note->on)
+                {
+                    // Key has been pressed again during release phase
+                    note->on = time;
+                    note->active = true;
+                }
+            }
+            else
+            {
+                // Key has been released, so switch off
+                if (note->off < note->on)
+                {
+                    note->off = time;
+                }
+            }
+        }
+        //muxNotes.unlock();
     }
 }
 
