@@ -1,4 +1,4 @@
-Determining if the pthread_create exist failed with the following output:
+Determining if the pthread_create exist failed with the following synth_Output:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_74990/fast"
@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 #endif
 }
 
-Determining if the function pthread_create exists in the pthreads failed with the following output:
+Determining if the function pthread_create exists in the pthreads failed with the following synth_Output:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_f2df4/fast"
