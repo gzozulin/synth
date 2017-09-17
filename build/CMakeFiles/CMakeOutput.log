@@ -4,7 +4,7 @@ Compiler: /usr/bin/cc
 Build flags: 
 Id flags: 
 
-The synth_Output was:
+The FTYPE was:
 0
 
 
@@ -17,7 +17,7 @@ Compiler: /usr/bin/c++
 Build flags: 
 Id flags: 
 
-The synth_Output was:
+The FTYPE was:
 0
 
 
@@ -25,7 +25,7 @@ Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" p
 
 The CXX compiler identification is GNU, found in "/home/grigory/synth/build/CMakeFiles/3.5.1/CompilerIdCXX/a.out"
 
-Determining if the C compiler works passed with the following synth_Output:
+Determining if the C compiler works passed with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_87924/fast"
@@ -39,7 +39,7 @@ Linking C executable cmTC_87924
 make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
 
 
-Detecting C compiler ABI info compiled with the following synth_Output:
+Detecting C compiler ABI info compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_1f91a/fast"
@@ -64,7 +64,7 @@ COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_1f91a' '-mtune=generic' '-march=x86-64'
 make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
 
 
-Parsed C implicit link information from above synth_Output:
+Parsed C implicit link information from above FTYPE:
   link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp]
   ignore line: []
@@ -151,7 +151,7 @@ Parsed C implicit link information from above synth_Output:
 
 
 
-Detecting C [-std=c11] compiler features compiled with the following synth_Output:
+Detecting C [-std=c11] compiler features compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_b8a63/fast"
@@ -171,7 +171,7 @@ make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
     Feature record: C_FEATURE:1c_variadic_macros
 
 
-Detecting C [-std=c99] compiler features compiled with the following synth_Output:
+Detecting C [-std=c99] compiler features compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_bcc7a/fast"
@@ -191,7 +191,7 @@ make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
     Feature record: C_FEATURE:1c_variadic_macros
 
 
-Detecting C [-std=c90] compiler features compiled with the following synth_Output:
+Detecting C [-std=c90] compiler features compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_ccbec/fast"
@@ -209,7 +209,7 @@ make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
     Feature record: C_FEATURE:0c_restrict
     Feature record: C_FEATURE:0c_static_assert
     Feature record: C_FEATURE:0c_variadic_macros
-Determining if the CXX compiler works passed with the following synth_Output:
+Determining if the CXX compiler works passed with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_acfff/fast"
@@ -223,7 +223,7 @@ Linking CXX executable cmTC_acfff
 make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
 
 
-Detecting CXX compiler ABI info compiled with the following synth_Output:
+Detecting CXX compiler ABI info compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_5cee0/fast"
@@ -248,7 +248,7 @@ COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_5cee0' '-shared-libgcc' '-mtune=generic' '-m
 make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
 
 
-Parsed CXX implicit link information from above synth_Output:
+Parsed CXX implicit link information from above FTYPE:
   link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp]
   ignore line: []
@@ -333,7 +333,7 @@ Parsed CXX implicit link information from above synth_Output:
 
 
 
-Detecting CXX [-std=c++14] compiler features compiled with the following synth_Output:
+Detecting CXX [-std=c++14] compiler features compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_5c001/fast"
@@ -406,7 +406,7 @@ make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
     Feature record: CXX_FEATURE:1cxx_variadic_templates
 
 
-Detecting CXX [-std=c++11] compiler features compiled with the following synth_Output:
+Detecting CXX [-std=c++11] compiler features compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_0438a/fast"
@@ -479,7 +479,7 @@ make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
     Feature record: CXX_FEATURE:1cxx_variadic_templates
 
 
-Detecting CXX [-std=c++98] compiler features compiled with the following synth_Output:
+Detecting CXX [-std=c++98] compiler features compiled with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_54358/fast"
@@ -550,7 +550,7 @@ make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
     Feature record: CXX_FEATURE:0cxx_variable_templates
     Feature record: CXX_FEATURE:0cxx_variadic_macros
     Feature record: CXX_FEATURE:0cxx_variadic_templates
-Determining if the include file pthread.h exists passed with the following synth_Output:
+Determining if the include file pthread.h exists passed with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_788ce/fast"
@@ -564,7 +564,7 @@ Linking C executable cmTC_788ce
 make[1]: Leaving directory '/home/grigory/synth/build/CMakeFiles/CMakeTmp'
 
 
-Determining if the function pthread_create exists in the pthread passed with the following synth_Output:
+Determining if the function pthread_create exists in the pthread passed with the following FTYPE:
 Change Dir: /home/grigory/synth/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTC_af33b/fast"

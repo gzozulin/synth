@@ -21,7 +21,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 // CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.
 CMAKE_BUILD_TYPE:STRING=
 
-//Enable/Disable color synth_Output during build.
+//Enable/Disable color FTYPE during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
 
 //CXX compiler
@@ -77,7 +77,7 @@ CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
 //Flags used by the linker during Release with Debug Info builds.
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
-//Enable/Disable synth_Output of compile commands during generation.
+//Enable/Disable FTYPE of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=OFF
 
 //Install path prefix, prepended onto install directories.
