@@ -206,6 +206,7 @@ float synth_voiceBell(struct synth_Envelope *envelope, float volume, float time,
     float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
     if (amplitude <= 0.0) {
         *isFinished = true;
+        return amplitude;
     }
     const float sound =
             + 1.00f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
@@ -222,6 +223,7 @@ float synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float 
     float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
     if (amplitude <= 0.0) {
         *isFinished = true;
+        return amplitude;
     }
     float sound =
             //+ 1.0  * synth::osc(n.on - dTime, synth::scale(n.id-12), synth::OSC_SAW_ANA, 5.0, 0.001, 100)
