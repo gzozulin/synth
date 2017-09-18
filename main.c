@@ -174,8 +174,8 @@ float synth_oscCreateSample(struct synth_Envelope *envelope, float time)
     assert(envelope != NULL);
     return MASTER_VOLUME * synth_envelopeGetAmplitude(envelope, time) *
             (
-                    + 0.5f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 2.0f, time)
-                    + 1.0f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 3.0f, time)
+                    + 0.50f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 2.0f, time)
+                    + 1.00f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 3.0f, time)
                     + 0.25f * synth_oscillate(WAVE_TYPE_SINE , g_baseFrequency * 4.0f, time)
             );
 }
