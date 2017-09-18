@@ -347,7 +347,7 @@ void synth_appHandleKey(SDL_Keycode keysym, bool pressed, float time)
                         g_notes[i] = malloc(sizeof(struct synth_Note));
                         g_notes[i]->id = k;
                         g_notes[i]->on = time;
-                        g_notes[i]->channel = g_leftShift ? 1 : 0;
+                        g_notes[i]->channel = g_leftShift ? 0 : 1;
                         break;
                     }
                 }
