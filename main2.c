@@ -210,10 +210,10 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, const float ti
 float synth_voiceBell(struct synth_Envelope *envelope, float volume, float time, struct synth_Note *note, bool *isFinished)
 {
     assert(envelope != NULL);
-    float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
+    const float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
     if (amplitude <= 0.0) {
         *isFinished = true;
-        return amplitude;
+        return 0.0f;
     }
     const float sound =
             + 1.00f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
@@ -227,12 +227,12 @@ struct synth_Envelope g_envelopeBell = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
 float synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float time, struct synth_Note *note, bool *isFinished)
 {
     assert(envelope != NULL);
-    float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
+    const float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
     if (amplitude <= 0.0) {
         *isFinished = true;
-        return amplitude;
+        return 0.0f;
     }
-    float sound =
+    const float sound =
             + 1.00f * synth_oscillate(time, synth_scaleNote(note->id), WAVE_TYPE_SQUARE, 5.0, 0.001, 50.0f)
             + 0.50f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SQUARE, 0.0f, 0.0f, 50.0f)
             + 0.05f  * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_NOISE, 0.0f, 0.0f, 50.0f);
