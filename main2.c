@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdbool.h>
+#include <float.h>
 #include "c11threads.h"
 
 #include "SDL2/SDL.h"
@@ -19,8 +20,6 @@ typedef float FTYPE;
 
 #define       PI                    ((float) M_PI)
 
-// -------------------------- +Variables --------------------------
-
 char          g_logBuffer[1024];
 
 SDL_Window    *g_window             = NULL;
@@ -28,7 +27,12 @@ SDL_Renderer  *g_renderer           = NULL;
 
 bool          g_quit                = false;
 
-FTYPE  g_audioBuffer[2048];
+FTYPE         g_audioBuffer[2048];
+
+#define       KEYS_NUM              16
+const char    *g_keys               = "zsxcfvgbnjmk\xbcl\xbe\xbf";
+
+#define       NOTES_NUM             16
 
 // -------------------------- +Common --------------------------
 
@@ -78,7 +82,12 @@ void logline(enum synth_LogLevel level, const char *file, int line, const char *
 
 extern inline FTYPE synth_convertFrequency(float hertz) { return hertz * 2.0f * PI; }
 
-extern inline FTYPE synth_scale(const int noteId) { return 256 * powf(1.0594630943592952645618252949463f, noteId); }
+extern inline float synth_scaleNote(int note)
+{
+    const float baseFrequency = 220.0f; // A2
+    const float twelwthRootOf2 = powf(2.0f, 1.0f / 12.0f);
+    return baseFrequency * powf(twelwthRootOf2, note);
+}
 
 struct synth_Note
 {
@@ -87,6 +96,14 @@ struct synth_Note
     FTYPE off;
     bool active;
     int channel;
+};
+
+struct synth_Note *g_notes[] =
+{
+    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL
 };
 
 enum synth_WaveType
@@ -132,7 +149,8 @@ float synth_oscillate(const FTYPE time, const FTYPE freq, const enum synth_WaveT
             return 2.0f * ((FTYPE) random() / (FTYPE) RAND_MAX) - 1.0f;
 
         default:
-            return 0.0;
+            loge("Unknown type!");
+            return 0.0f;
     }
 }
 
@@ -149,122 +167,113 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, const FTYPE ti
 {
     assert(envelope != NULL);
     
-    FTYPE dAmplitude = 0.0;
-    FTYPE dReleaseAmplitude = 0.0;
+    FTYPE amplitude = 0.0f;
 
     if (timeOn > timeOff) // Note is on
     {
-        FTYPE dLifeTime = time - timeOn;
+        FTYPE lifetime = time - timeOn;
 
-        if (dLifeTime <= envelope->attackTime)
-            dAmplitude = (dLifeTime / envelope->attackTime) * envelope->startAmplitude;
+        if (lifetime <= envelope->attackTime) {
+            amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
+        }
 
-        if (dLifeTime > envelope->attackTime && dLifeTime <= (envelope->attackTime + envelope->decayTime))
-            dAmplitude = ((dLifeTime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
+        if (lifetime > envelope->attackTime && lifetime <= (envelope->attackTime + envelope->decayTime)) {
+            amplitude = ((lifetime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
+        }
 
-        if (dLifeTime > (envelope->attackTime + envelope->decayTime))
-            dAmplitude = envelope->sustainAmplitude;
+        if (lifetime > (envelope->attackTime + envelope->decayTime)) {
+            amplitude = envelope->sustainAmplitude;
+        }
+
     }
     else // Note is off
     {
-        FTYPE dLifeTime = timeOff - timeOn;
+        FTYPE releaseAmplitude = 0.0f;
+        FTYPE lifetime = timeOff - timeOn;
 
-        if (dLifeTime <= envelope->attackTime)
-            dReleaseAmplitude = (dLifeTime / envelope->attackTime) * envelope->startAmplitude;
+        if (lifetime <= envelope->attackTime) {
+            releaseAmplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
+        }
 
-        if (dLifeTime > envelope->attackTime && dLifeTime <= (envelope->attackTime + envelope->decayTime))
-            dReleaseAmplitude = ((dLifeTime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
+        if (lifetime > envelope->attackTime && lifetime <= (envelope->attackTime + envelope->decayTime)) {
+            releaseAmplitude = ((lifetime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
+        }
 
-        if (dLifeTime > (envelope->attackTime + envelope->decayTime))
-            dReleaseAmplitude = envelope->sustainAmplitude;
+        if (lifetime > (envelope->attackTime + envelope->decayTime)) {
+            releaseAmplitude = envelope->sustainAmplitude;
+        }
 
-        dAmplitude = ((time - timeOff) / envelope->releaseTime) * (0.0f - dReleaseAmplitude) + dReleaseAmplitude;
+        amplitude = ((time - timeOff) / envelope->releaseTime) * (0.0f - releaseAmplitude) + releaseAmplitude;
     }
 
     // Amplitude should not be negative
-    if (dAmplitude <= FLT_EPSILON)
-        dAmplitude = 0.0;
+    if (amplitude <= FLT_EPSILON) {
+        amplitude = 0.0f;
+    }
 
-    return dAmplitude;
+    return amplitude;
 }
 
-struct synth_Instrument
+FTYPE synth_voiceBell(struct synth_Envelope *envelope, float volume, float time, struct synth_Note *note, bool *isFinished)
 {
-    FTYPE volume;
-    struct synth_Envelope envelope;
-};
-
-FTYPE synth_voiceBell(struct synth_Instrument * instrument, float time, struct synth_Note *note, bool *isFinished)
-{
-    assert(instrument != NULL);
-    FTYPE dAmplitude = synth_envelopeGetAmplitude(&instrument->envelope, time, note->on, note->off);
-    if (dAmplitude <= 0.0) {
+    assert(envelope != NULL);
+    FTYPE amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
+    if (amplitude <= 0.0) {
         *isFinished = true;
     }
 
-    FTYPE dSound =
-            + 1.0f * synth_oscillate(note->on - time, synth_scale(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
-            + 0.5f * synth_oscillate(note->on - time, synth_scale(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
-            + 0.25f * synth_oscillate(note->on - time, synth_scale(note->id + 36), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f);
+    const FTYPE sound =
+            + 1.0f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
+            + 0.5f * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
+            + 0.25f * synth_oscillate(time, synth_scaleNote(note->id + 36), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f);
 
-    return dAmplitude * dSound * instrument->volume;
+    return amplitude * sound * volume;
 }
 
-struct synth_Instrument g_instrumentBell = { 1.0f, { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f } };
+struct synth_Envelope g_envelopeBell = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
 
-FTYPE synth_voiceHarmonica(struct synth_Instrument * instrument, float time, struct synth_Note *note, bool *isFinished)
+FTYPE synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float time, struct synth_Note *note, bool *isFinished)
 {
-    assert(instrument != NULL);
-    FTYPE dAmplitude = synth_envelopeGetAmplitude(&instrument->envelope, time, note->on, note->off);
-    if (dAmplitude <= 0.0) {
+    assert(envelope != NULL);
+    FTYPE amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
+    if (amplitude <= 0.0) {
         *isFinished = true;
     }
 
-    FTYPE dSound =
-            + 1.0f * synth_oscillate(note->on - time, synth_scale(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
-            + 0.5f * synth_oscillate(note->on - time, synth_scale(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
-            + 0.25f * synth_oscillate(note->on - time, synth_scale(note->id + 36), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f);
+    FTYPE sound =
+            + 1.00f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
+            + 0.50f * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
+            + 0.25f * synth_oscillate(time, synth_scaleNote(note->id + 36), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f);
 
-    return dAmplitude * dSound * instrument->volume;
+    return amplitude * sound * volume;
 }
 
-struct synth_Instrument g_instrumentHarmonica = { 1.0f, { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f } };
+struct synth_Envelope g_envelopeHarmonica = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
 
 // -------------------------- +Audio --------------------------
-
-#define NOTES_NUM 16
-struct synth_Note *g_notes[] =
-{
-        NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL
-};
 
 FTYPE synth_audioSampleCreate(FTYPE time)
 {
     //todo: unique_lock<mutex> lm(muxNotes);
     FTYPE dMixedOutput = 0.0;
-
     for (int i = 0; i < NOTES_NUM; i++) {
-
         struct synth_Note *note = g_notes[i];
         if (note == NULL) {
             continue;
         }
-
-        bool bNoteFinished = false;
+        bool noteFinished = false;
         FTYPE dSound = 0;
-        if(note->channel == 2)
-            dSound = synth_voiceBell(&g_instrumentBell, time, note, &bNoteFinished);
-        if (note->channel == 1)
-            dSound = synth_voiceHarmonica(&g_instrumentHarmonica, time, note, &bNoteFinished) * 0.5f;
+        if(note->channel == 2) {
+            dSound = synth_voiceBell(&g_envelopeBell, 1.0f, time, note, &noteFinished);
+        }
+        if (note->channel == 1) {
+            dSound = synth_voiceHarmonica(&g_envelopeHarmonica, 0.4f, time, note, &noteFinished) * 0.5f;
+        }
         dMixedOutput += dSound;
-
-        if (bNoteFinished && note->off > note->on)
+        if (noteFinished && note->off > note->on) {
             note->active = false;
+        }
     }
-
     for (int i = 0; i < NOTES_NUM; i++) {
         struct synth_Note *note = g_notes[i];
         if (note != NULL && !note->active) {
@@ -272,7 +281,6 @@ FTYPE synth_audioSampleCreate(FTYPE time)
             g_notes[i] = NULL;
         }
     }
-
     return dMixedOutput * 0.2f;
 }
 
@@ -281,17 +289,15 @@ void synth_audioAppendBuffer(SDL_AudioDeviceID dev, FTYPE start, FTYPE *accumula
     uint index = 0;
     while (*accumulator > SAMPLE_TIME) {
         const FTYPE time = start + index * SAMPLE_TIME;
-        const FTYPE sample = synth_audioSampleCreate(time);
-        g_audioBuffer[index] = sample;
+        g_audioBuffer[index] = synth_audioSampleCreate(time);
         *accumulator -= SAMPLE_TIME;
         index++;
     }
-    SDL_ENFORCE(SDL_QueueAudio(dev, g_audioBuffer, index + 1));
+    SDL_ENFORCE(SDL_QueueAudio(dev, g_audioBuffer, index));
 }
 
 void synth_audioDeviceList()
 {
-    logi("synth_audioDeviceList()");
     const int num = SDL_GetNumAudioDevices(0);
     for (int i = 0; i < num; ++i) {
         logi("Found audio device: %s", SDL_GetAudioDeviceName(i, 0));
@@ -309,7 +315,6 @@ void synth_audioDevicePrintSpec(SDL_AudioSpec *spec)
 
 void synth_audioDevicePrepare()
 {
-    logi("synth_audioDevicePrepare()");
     synth_audioDeviceList();
     SDL_AudioSpec asked, received;
     memset(&asked, 0, sizeof(asked));
@@ -330,7 +335,6 @@ void synth_audioDevicePrepare()
 
 void synth_appWinCreate()
 {
-    logi("synth_appWinCreate()");
     SDL_ENFORCE(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER));
     g_window = SDL_CreateWindow( "SDL Synth", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 300, 200, SDL_WINDOW_SHOWN);
     SDL_ENFORCE_PTR(g_window);
@@ -341,23 +345,17 @@ void synth_appWinCreate()
     SDL_RenderPresent(g_renderer);
 }
 
-#define KEYS_NUM 16
-const char *g_keys = "zsxcfvgbnjmk\xbcl\xbe\xbf";
-
-void synth_appHandleKey(SDL_Keycode sym, bool pressed, FTYPE time)
+void synth_appHandleKey(SDL_Keycode keysym, bool pressed, FTYPE time)
 {
     for (int k = 0; k < KEYS_NUM; k++)
     {
         char key = g_keys[k];
-        if (sym != key) {
+        if (keysym != key) {
             continue;
         }
 
-
         // Check if note already exists in currently playing notes
         //muxNotes.lock();
-        //auto noteFound = find_if(vecNotes.begin(), vecNotes.end(), [&k](synth::note const& item) { return item.id == k; });
-
 
         struct synth_Note *note = NULL;
         for (int i = 0; i < NOTES_NUM; ++i) {
@@ -366,7 +364,6 @@ void synth_appHandleKey(SDL_Keycode sym, bool pressed, FTYPE time)
                 break;
             }
         }
-
 
         if (note == NULL)
         {
@@ -381,6 +378,9 @@ void synth_appHandleKey(SDL_Keycode sym, bool pressed, FTYPE time)
                     if (g_notes[i] == NULL) {
                         g_notes[i] = malloc(sizeof(struct synth_Note));
 
+                        //logi("creating")
+
+
                         g_notes[i]->id = k;
                         g_notes[i]->on = time;
                         g_notes[i]->channel = 1;
@@ -389,11 +389,6 @@ void synth_appHandleKey(SDL_Keycode sym, bool pressed, FTYPE time)
                         break;
                     }
                 }
-            }
-            else
-            {
-                // Note not in vector, but key has been released...
-                // ...nothing to do
             }
         }
         else
@@ -450,7 +445,7 @@ void synth_appRunLoop()
         const FTYPE finish = synth_appGetTime();
         const FTYPE sleep = TICK_TIME - (finish - start);
         if (sleep > 0) {
-            synth_appSleep(sleep);
+           synth_appSleep(sleep);
         }
         last = start;
     }
