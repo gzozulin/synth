@@ -7,11 +7,13 @@
 
 // -------------------------- +Const --------------------------
 
+SDL_Window    *g_window             = NULL;
+SDL_Renderer  *g_renderer           = NULL;
+
 #define       FREQUENCY             44100
 #define       SAMPLES               512
 
 #define       TICK_TIME             (1.0f / 60.0f)
-
 #define       SAMPLE_TIME           (1.0f / (float) FREQUENCY)
 
 #define       AUDIO_DEV_ID          1
@@ -20,9 +22,6 @@
 
 char          g_logBuffer[1024];
 
-SDL_Window    *g_window             = NULL;
-SDL_Renderer  *g_renderer           = NULL;
-
 bool          g_quit                = false;
 
 float         g_audioBuffer[2048];
@@ -30,7 +29,9 @@ float         g_audioBuffer[2048];
 #define       KEYS_NUM              16
 const char    *g_keys               = "zsxcfvgbnjmk,l./";
 
-#define       NOTES_NUM             16
+#define       NOTES_NUM             KEYS_NUM
+
+bool          g_leftShift           = false;
 
 // -------------------------- +Common --------------------------
 
@@ -61,11 +62,15 @@ void logline(enum synth_LogLevel level, const char *file, int line, const char *
     va_end(args);
     switch (level) {
         case LOG_LEVEL_INFO:
+        {
             printf("%.2f -> INFO -> %s:%d %s\n", synth_appGetTime(), file, line, g_logBuffer);
             break;
+        }
         case LOG_LEVEL_ERROR:
+        {
             printf("%.2f -> ERROR -> %s:%d %s\n", synth_appGetTime(), file, line, g_logBuffer);
             exit(-1);
+        }
     }
 }
 
@@ -92,7 +97,6 @@ struct synth_Note
     int id;
     float on;
     float off;
-    bool active;
     int channel;
 };
 
@@ -168,7 +172,8 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, const float ti
 {
     assert(envelope != NULL);
     float amplitude;
-    if (timeOn > timeOff) { // note is on
+    const bool noteIsOn = timeOn > timeOff;
+    if (noteIsOn) {
         float lifetime = time - timeOn;
         if (lifetime <= envelope->attackTime) {
             amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
@@ -177,8 +182,8 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, const float ti
         } else {
             amplitude = envelope->sustainAmplitude;
         }
-    } else { // note is off
-        float releaseAmplitude = 0.0f;
+    } else {
+        float releaseAmplitude;
         float lifetime = timeOff - timeOn;
         if (lifetime <= envelope->attackTime) {
             releaseAmplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
@@ -203,8 +208,8 @@ float synth_voiceBell(struct synth_Envelope *envelope, float volume, float time,
         *isFinished = true;
     }
     const float sound =
-            + 1.0f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
-            + 0.5f * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
+            + 1.00f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
+            + 0.50f * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
             + 0.25f * synth_oscillate(time, synth_scaleNote(note->id + 36), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f);
     return amplitude * sound * volume;
 }
@@ -219,13 +224,14 @@ float synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float 
         *isFinished = true;
     }
     float sound =
-            + 1.00f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SINE, 5.0f, 0.001f, 50.0f)
-            + 0.50f * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f)
-            + 0.25f * synth_oscillate(time, synth_scaleNote(note->id + 36), WAVE_TYPE_SINE, 0.0f, 0.0f, 50.0f);
+            //+ 1.0  * synth::osc(n.on - dTime, synth::scale(n.id-12), synth::OSC_SAW_ANA, 5.0, 0.001, 100)
+            + 1.00f * synth_oscillate(time, synth_scaleNote(note->id), WAVE_TYPE_SQUARE, 5.0, 0.001, 50.0f)
+            + 0.50f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SQUARE, 0.0f, 0.0f, 50.0f)
+            + 0.05f  * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_NOISE, 0.0f, 0.0f, 50.0f);
     return amplitude * sound * volume;
 }
 
-struct synth_Envelope g_envelopeHarmonica = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
+struct synth_Envelope g_envelopeHarmonica = { 0.05f, 1.0f, 0.1f, 1.0f, 0.95f };
 
 // -------------------------- +Audio --------------------------
 
@@ -241,8 +247,8 @@ float synth_audioSampleCreate(float time)
         bool noteFinished = false;
         float dSound = 0;
         switch (note->channel) {
-            case 1: dSound = synth_voiceHarmonica(&g_envelopeHarmonica, 0.4f, time, note, &noteFinished) * 0.5f; break;
-            case 2: dSound = synth_voiceBell(&g_envelopeBell, 1.0f, time, note, &noteFinished); break;
+            case 0: dSound = synth_voiceHarmonica(&g_envelopeHarmonica, 0.5f, time, note, &noteFinished); break;
+            case 1: dSound = synth_voiceBell(&g_envelopeBell, 0.5f, time, note, &noteFinished); break;
             default: loge("Unknown channel!"); break;
         }
         mixedOutput += dSound;
@@ -339,8 +345,7 @@ void synth_appHandleKey(SDL_Keycode keysym, bool pressed, float time)
                         g_notes[i] = malloc(sizeof(struct synth_Note));
                         g_notes[i]->id = k;
                         g_notes[i]->on = time;
-                        g_notes[i]->channel = 1;
-                        g_notes[i]->active = true;
+                        g_notes[i]->channel = g_leftShift ? 1 : 0;
                         break;
                     }
                 }
@@ -349,7 +354,6 @@ void synth_appHandleKey(SDL_Keycode keysym, bool pressed, float time)
             if (pressed) {
                 if (note->off > note->on) {
                     note->on = time;
-                    note->active = true;
                 }
             } else {
                 if (note->off < note->on) {
@@ -365,8 +369,10 @@ void synth_appPollEvents(float time)
 {
     SDL_Event event;
     while( SDL_PollEvent(&event) != 0 ) {
-        if(event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == 27)) {
+        if(event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
             g_quit = true;
+        } else if (event.key.keysym.sym == SDLK_LSHIFT) {
+            g_leftShift = event.type == SDL_KEYDOWN;
         } else if (event.type == SDL_KEYDOWN) {
             synth_appHandleKey(event.key.keysym.sym, true, time);
         } else if (event.type == SDL_KEYUP) {
