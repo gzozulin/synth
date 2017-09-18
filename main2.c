@@ -184,7 +184,7 @@ float synth_envelopeGetAmplitude(const struct synth_Envelope *envelope, const fl
         float lifetime = time - timeOn;
         if (lifetime <= envelope->attackTime) {
             amplitude = (lifetime / envelope->attackTime) * envelope->startAmplitude;
-        }else if (lifetime <= (envelope->attackTime + envelope->decayTime)) {
+        } else if (lifetime <= (envelope->attackTime + envelope->decayTime)) {
             amplitude = ((lifetime - envelope->attackTime) / envelope->decayTime) * (envelope->sustainAmplitude - envelope->startAmplitude) + envelope->startAmplitude;
         } else {
             amplitude = envelope->sustainAmplitude;
