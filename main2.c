@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <float.h>
+
 #include "c11threads.h"
 
 #include "SDL2/SDL.h"
@@ -84,13 +85,7 @@ void logline(enum synth_LogLevel level, const char *file, int line, const char *
 // -------------------------- +Synth --------------------------
 
 extern inline float synth_convertFrequency(float hertz) { return hertz * 2.0f * PI; }
-
-extern inline float synth_scaleNote(int note)
-{
-    const float baseFrequency = 220.0f; // A2
-    const float twelwthRootOf2 = powf(2.0f, 1.0f / 12.0f);
-    return baseFrequency * powf(twelwthRootOf2, note);
-}
+extern inline float synth_scaleNote(int note) { return 256 * powf(1.0594630943592952645618252949463f, note); }
 
 struct synth_Note
 {
@@ -134,11 +129,17 @@ float synth_oscillate(const float time, const float freq, const enum synth_WaveT
     const float dFreq = synth_convertFrequency(freq) * time + lfoAmplitude * freq * (sinf(synth_convertFrequency(lfoFreq) * time));
     switch (type) {
         case WAVE_TYPE_SINE: // Sine wave bewteen -1 and +1
+        {
             return sinf(dFreq);
+        }
         case WAVE_TYPE_SQUARE: // Square wave between -1 and +1
+        {
             return sinf(dFreq) > 0 ? 1.0f : -1.0f;
+        }
         case WAVE_TYPE_TRIANGLE: // Triangle wave between -1 and +1
+        {
             return asinf(sinf(dFreq)) * (2.0f / PI);
+        }
         case WAVE_TYPE_SAW_ANALOGUE: // Saw wave (analogue / warm / slow)
         {
             float dOutput = 0.0;
@@ -150,12 +151,18 @@ float synth_oscillate(const float time, const float freq, const enum synth_WaveT
             return dOutput * (2.0f / PI);
         }
         case WAVE_TYPE_SAW_DIGITAL:
+        {
             return (2.0f / PI) * (freq * PI * fmodf(time, 1.0f / freq) - (PI / 2.0f));
+        }
         case WAVE_TYPE_NOISE:
+        {
             return 2.0f * ((float) random() / (float) RAND_MAX) - 1.0f;
+        }
         default:
+        {
             loge("Unknown type!");
             return 0.0f;
+        }
     }
 }
 
@@ -226,7 +233,6 @@ float synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float 
         return amplitude;
     }
     float sound =
-            //+ 1.0  * synth::osc(n.on - dTime, synth::scale(n.id-12), synth::OSC_SAW_ANA, 5.0, 0.001, 100)
             + 1.00f * synth_oscillate(time, synth_scaleNote(note->id), WAVE_TYPE_SQUARE, 5.0, 0.001, 50.0f)
             + 0.50f * synth_oscillate(time, synth_scaleNote(note->id + 12), WAVE_TYPE_SQUARE, 0.0f, 0.0f, 50.0f)
             + 0.05f  * synth_oscillate(time, synth_scaleNote(note->id + 24), WAVE_TYPE_NOISE, 0.0f, 0.0f, 50.0f);
