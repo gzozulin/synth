@@ -41,7 +41,7 @@ extern inline float synth_appGetTime()
     return (float) SDL_GetTicks() / 1000.0f;
 }
 
-extern inline void  synth_appSleep(float seconds)
+extern inline void  synth_appSleep(const float seconds)
 {
     const long millis = (const long) (seconds * 1e+6);
     const long nanos = millis * 1000L;
@@ -55,7 +55,7 @@ enum synth_LogLevel
     LOG_LEVEL_ERROR
 };
 
-void logline(enum synth_LogLevel level, const char *file, int line, const char *fmt, ...)
+void logline(const enum synth_LogLevel level, const char *file, int line, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -84,8 +84,8 @@ void logline(enum synth_LogLevel level, const char *file, int line, const char *
 
 // -------------------------- +Synth --------------------------
 
-extern inline float synth_convertFrequency(float hertz) { return hertz * 2.0f * PI; }
-extern inline float synth_scaleNote(int note) { return 256 * powf(1.0594630943592952645618252949463f, note); }
+extern inline float synth_convertFrequency(const float hertz) { return hertz * 2.0f * PI; }
+extern inline float synth_scaleNote(const int note) { return 256 * powf(1.0594630943592952645618252949463f, note); }
 
 struct synth_Note
 {
@@ -124,7 +124,7 @@ enum synth_WaveType
     WAVE_TYPE_NOISE
 };
 
-float synth_oscillate(const float time, const float freq, const enum synth_WaveType type, const float lfoFreq, const float lfoAmplitude, float custom)
+float synth_oscillate(const float time, const float freq, const enum synth_WaveType type, const float lfoFreq, const float lfoAmplitude, const float custom)
 {
     const float dFreq = synth_convertFrequency(freq) * time + lfoAmplitude * freq * (sinf(synth_convertFrequency(lfoFreq) * time));
     switch (type) {
@@ -175,7 +175,7 @@ struct synth_Envelope
     float sustainAmplitude;
 };
 
-float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, const float time, const float timeOn, const float timeOff)
+float synth_envelopeGetAmplitude(const struct synth_Envelope *envelope, const float time, const float timeOn, const float timeOff)
 {
     assert(envelope != NULL);
     float amplitude;
@@ -207,7 +207,7 @@ float synth_envelopeGetAmplitude(struct synth_Envelope *envelope, const float ti
     return amplitude;
 }
 
-float synth_voiceBell(struct synth_Envelope *envelope, float volume, float time, struct synth_Note *note, bool *isFinished)
+float synth_voiceBell(const struct synth_Envelope *envelope, const float volume, const float time, const struct synth_Note *note, bool *isFinished)
 {
     assert(envelope != NULL);
     const float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
@@ -222,9 +222,9 @@ float synth_voiceBell(struct synth_Envelope *envelope, float volume, float time,
     return amplitude * sound * volume;
 }
 
-struct synth_Envelope g_envelopeBell = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
+const struct synth_Envelope g_envelopeBell = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
 
-float synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float time, struct synth_Note *note, bool *isFinished)
+float synth_voiceHarmonica(const struct synth_Envelope *envelope, const float volume, const float time, const struct synth_Note *note, bool *isFinished)
 {
     assert(envelope != NULL);
     const float amplitude = synth_envelopeGetAmplitude(envelope, time, note->on, note->off);
@@ -239,11 +239,11 @@ float synth_voiceHarmonica(struct synth_Envelope *envelope, float volume, float 
     return amplitude * sound * volume;
 }
 
-struct synth_Envelope g_envelopeHarmonica = { 0.05f, 1.0f, 0.1f, 1.0f, 0.95f };
+const struct synth_Envelope g_envelopeHarmonica = { 0.05f, 1.0f, 0.1f, 1.0f, 0.95f };
 
 // -------------------------- +Audio --------------------------
 
-float synth_audioSampleCreate(float time)
+float synth_audioSampleCreate(const float time)
 {
     mtx_lock(&g_notesMutex);
     float mixedOutput = 0.0;
@@ -269,7 +269,7 @@ float synth_audioSampleCreate(float time)
     return mixedOutput;
 }
 
-void synth_audioAppendBuffer(SDL_AudioDeviceID dev, float start, float *accumulator)
+void synth_audioAppendBuffer(const SDL_AudioDeviceID dev, const float start, float *accumulator)
 {
     uint index = 0;
     while (*accumulator > SAMPLE_TIME) {
@@ -289,7 +289,7 @@ void synth_audioDeviceList()
     }
 }
 
-void synth_audioDevicePrintSpec(SDL_AudioSpec *spec)
+void synth_audioDevicePrintSpec(const SDL_AudioSpec *spec)
 {
     assert(spec != NULL);
     logi("Received freq: %d", spec->freq);
@@ -330,7 +330,7 @@ void synth_appWinCreate()
     SDL_RenderPresent(g_renderer);
 }
 
-void synth_appHandleKey(SDL_Keycode keysym, bool pressed, float time)
+void synth_appHandleKey(const SDL_Keycode keysym, const bool pressed, const float time)
 {
     for (int k = 0; k < KEYS_NUM; k++)
     {
@@ -373,7 +373,7 @@ void synth_appHandleKey(SDL_Keycode keysym, bool pressed, float time)
     }
 }
 
-void synth_appPollEvents(float time)
+void synth_appPollEvents(const float time)
 {
     SDL_Event event;
     while( SDL_PollEvent(&event) != 0 ) {
@@ -389,7 +389,7 @@ void synth_appPollEvents(float time)
     }
 }
 
-void synth_appSleepIfNeeded(float start)
+void synth_appSleepIfNeeded(const float start)
 {
     const float finish = synth_appGetTime();
     const float sleep = TICK_TIME - (finish - start);
