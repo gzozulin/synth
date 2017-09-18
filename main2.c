@@ -28,7 +28,7 @@ bool          g_quit                = false;
 float         g_audioBuffer[2048];
 
 #define       KEYS_NUM              16
-const char    *g_keys               = "zsxcfvgbnjmk\xbcl\xbe\xbf";
+const char    *g_keys               = "zsxcfvgbnjmk,l./";
 
 #define       NOTES_NUM             16
 
