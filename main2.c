@@ -255,7 +255,7 @@ struct synth_Envelope g_envelopeHarmonica = { 0.01f, 1.0f, 1.0f, 1.0f, 0.0f };
 FTYPE synth_audioSampleCreate(FTYPE time)
 {
     //todo: unique_lock<mutex> lm(muxNotes);
-    FTYPE dMixedOutput = 0.0;
+    FTYPE mixedOutput = 0.0;
     for (int i = 0; i < NOTES_NUM; i++) {
         struct synth_Note *note = g_notes[i];
         if (note == NULL) {
@@ -263,25 +263,18 @@ FTYPE synth_audioSampleCreate(FTYPE time)
         }
         bool noteFinished = false;
         FTYPE dSound = 0;
-        if(note->channel == 2) {
-            dSound = synth_voiceBell(&g_envelopeBell, 1.0f, time, note, &noteFinished);
+        switch (note->channel) {
+            case 1: dSound = synth_voiceHarmonica(&g_envelopeHarmonica, 0.4f, time, note, &noteFinished) * 0.5f; break;
+            case 2: dSound = synth_voiceBell(&g_envelopeBell, 1.0f, time, note, &noteFinished); break;
+            default: loge("Unknown channel!"); break;
         }
-        if (note->channel == 1) {
-            dSound = synth_voiceHarmonica(&g_envelopeHarmonica, 0.4f, time, note, &noteFinished) * 0.5f;
-        }
-        dMixedOutput += dSound;
+        mixedOutput += dSound;
         if (noteFinished && note->off > note->on) {
-            note->active = false;
-        }
-    }
-    for (int i = 0; i < NOTES_NUM; i++) {
-        struct synth_Note *note = g_notes[i];
-        if (note != NULL && !note->active) {
             g_notes[i] = NULL;
             free(note);
         }
     }
-    return dMixedOutput;
+    return mixedOutput;
 }
 
 void synth_audioAppendBuffer(SDL_AudioDeviceID dev, FTYPE start, FTYPE *accumulator)
@@ -455,12 +448,23 @@ void synth_appRunLoop()
     }
 }
 
+void synth_appPringKeysLayout()
+{
+    logi("|   |   |   |   |   | |   |   |   |   | |   | |   |   |   |");
+    logi("|   | S |   |   | F | | G |   |   | J | | K | | L |   |   |");
+    logi("|   |___|   |   |___| |___|   |   |___| |___| |___|   |   |__");
+    logi("|     |     |     |     |     |     |     |     |     |     |");
+    logi("|  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |");
+    logi("|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|");
+}
+
 // -------------------------- +Main --------------------------
 
 int main()
 {
     synth_appWinCreate();
     synth_audioDevicePrepare();
+    synth_appPringKeysLayout();
     SDL_PauseAudio(0);
     synth_appRunLoop();
     SDL_CloseAudio();
