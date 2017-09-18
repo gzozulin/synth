@@ -277,11 +277,11 @@ FTYPE synth_audioSampleCreate(FTYPE time)
     for (int i = 0; i < NOTES_NUM; i++) {
         struct synth_Note *note = g_notes[i];
         if (note != NULL && !note->active) {
-            free(note);
             g_notes[i] = NULL;
+            free(note);
         }
     }
-    return dMixedOutput * 0.2f;
+    return dMixedOutput;
 }
 
 void synth_audioAppendBuffer(SDL_AudioDeviceID dev, FTYPE start, FTYPE *accumulator)
@@ -359,8 +359,8 @@ void synth_appHandleKey(SDL_Keycode keysym, bool pressed, FTYPE time)
 
         struct synth_Note *note = NULL;
         for (int i = 0; i < NOTES_NUM; ++i) {
-            note = g_notes[i];
-            if (note != NULL && note->id == k) {
+            if (g_notes[i] != NULL && g_notes[i]->id == k) {
+                note = g_notes[i];
                 break;
             }
         }
@@ -379,7 +379,6 @@ void synth_appHandleKey(SDL_Keycode keysym, bool pressed, FTYPE time)
                         g_notes[i] = malloc(sizeof(struct synth_Note));
 
                         //logi("creating")
-
 
                         g_notes[i]->id = k;
                         g_notes[i]->on = time;
@@ -431,6 +430,15 @@ void synth_appPollEvents(FTYPE time)
     }
 }
 
+void synth_appSleepIfNeeded(FTYPE start)
+{
+    const FTYPE finish = synth_appGetTime();
+    const FTYPE sleep = TICK_TIME - (finish - start);
+    if (sleep > 0) {
+        synth_appSleep(sleep);
+    }
+}
+
 void synth_appRunLoop()
 {
     logi("synth_appRunLoop() called");
@@ -442,12 +450,8 @@ void synth_appRunLoop()
         const FTYPE elapsed = start - last;
         accumulator += elapsed;
         synth_audioAppendBuffer(AUDIO_DEV_ID, last, &accumulator);
-        const FTYPE finish = synth_appGetTime();
-        const FTYPE sleep = TICK_TIME - (finish - start);
-        if (sleep > 0) {
-           synth_appSleep(sleep);
-        }
         last = start;
+        synth_appSleepIfNeeded(start);
     }
 }
 
